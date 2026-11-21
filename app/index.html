@@ -345,7 +345,9 @@ function stopAudio(){try{speechSynthesis.cancel()}catch(e){}speaking=null}
 /* ---------- helpers ---------- */
 const P=n=>D.psalms[n-1];
 function verseText(n,v){for(const b of P(n).blocks){const t=b.text.find(x=>x.v===v);if(t)return t.t}return ''}
-function vodToday(){const d=new Date(),s=new Date(d.getFullYear(),0,0),i=Math.floor((d-s)/864e5)%VOD.length;const [n,v]=VOD[i];return{n,v,t:verseText(n,v),ref:`Salmo ${n}:${v}`}}
+function vodToday(){const d=new Date(),s=new Date(d.getFullYear(),0,0),day=Math.floor((d-s)/864e5);
+  // só versículos com texto disponível (na versão grátis parte dos salmos vem incompleta)
+  const ok=VOD.filter(([n,v])=>P(n)&&verseText(n,v));const L=ok.length?ok:VOD;const [n,v]=L[day%L.length];return{n,v,t:verseText(n,v),ref:`Salmo ${n}:${v}`}}
 function greet(){const h=new Date().getHours();return h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches'}
 function nextDay(){for(let i=1;i<=30;i++)if(!S.done.includes(i))return i;return 30}
 function isFav(k){return S.favs.includes(k)}
