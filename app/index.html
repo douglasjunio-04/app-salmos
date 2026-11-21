@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Palabra con Poder</title>
+<meta name="theme-color" content="#1D2A3B">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Palabra">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --mist:#EEF1F5; --paper:#FFFFFF; --ink:#1D2A3B; --ink2:#4A5868; --ink3:#7A8696;
+  --lamp:#D9A23B; --lampdeep:#9A6B12; --olive:#56653C; --olivebg:#E6EADB; --line:#D9DFE8;
+  --serif:'Literata',Georgia,serif; --sans:'Figtree',system-ui,sans-serif;
+  --fs:18px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:var(--sans);color:var(--ink);background:#DCE2EA;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--lamp);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- prévia: layout ---------- */
+.stage{min-height:100%;display:flex;gap:40px;justify-content:center;align-items:flex-start;padding:32px 24px}
+.panel{width:320px;flex:none;font-size:14px;line-height:1.5;color:var(--ink);position:sticky;top:32px}
+.panel h1{font-family:var(--serif);font-weight:500;font-size:24px;line-height:1.2;margin:0 0 6px}
+.panel p{margin:0 0 12px;color:var(--ink2)}
+.panel h2{font-size:14px;font-weight:700;margin:20px 0 8px}
+.seg{display:flex;flex-direction:column;gap:6px}
+.seg button{text-align:left;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:10px 12px}
+.seg button[aria-pressed=true]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.seg small{display:block;color:var(--ink3);font-size:12px}
+.panel ul{margin:0;padding-left:18px;color:var(--ink2)}
+.panel li{margin:3px 0}
+.linkbtn{background:none;border:0;padding:0;color:var(--ink2);text-decoration:underline;font-size:13px}
+.phone{width:390px;height:844px;flex:none;border-radius:44px;background:var(--mist);box-shadow:0 0 0 10px #10171F,0 30px 60px rgba(16,23,31,.35);overflow:hidden;position:relative}
+.panel-toggle{display:none}
+@media (max-width:820px){
+  body{background:var(--mist)}
+  .stage{padding:0;display:block}
+  .phone{width:100%;height:100dvh;border-radius:0;box-shadow:none}
+  .panel{display:none;position:fixed;inset:auto 0 0 0;top:auto;width:auto;z-index:60;background:var(--paper);padding:20px 20px 28px;border-radius:18px 18px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.25);max-height:80dvh;overflow:auto}
+  .panel.open{display:block}
+  .panel-toggle{display:block;position:fixed;right:12px;bottom:84px;z-index:55;background:var(--lamp);color:var(--ink);border:0;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700}
+}
+
+/* ---------- app ---------- */
+.app{position:absolute;inset:0;display:flex;flex-direction:column}
+.screen{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 0 96px}
+.topbar{display:flex;align-items:center;gap:8px;padding:16px 16px 8px;min-height:56px}
+.back{border:0;background:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;margin-left:-8px}
+.back:hover{background:rgba(29,42,59,.06)}
+.topbar h2{font-size:16px;font-weight:600;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{border:0;background:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--ink2)}
+.iconbtn[aria-pressed=true]{color:var(--lampdeep)}
+.pad{padding:0 20px}
+.tabs{position:absolute;left:0;right:0;bottom:0;display:flex;background:var(--paper);border-top:1px solid var(--line);padding:6px 4px 14px}
+.tabs button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:500;color:var(--ink3);padding:6px 0}
+.tabs button[aria-current=page]{color:var(--ink)}
+.tabs button[aria-current=page] svg{color:var(--lampdeep)}
+
+/* home */
+.hello{padding:22px 20px 4px}
+.hello .brand{font-size:13px;font-weight:600;color:var(--ink3)}
+.hello h1{font-family:var(--serif);font-weight:500;font-size:30px;line-height:1.15;margin:4px 0 0}
+.vod{margin:18px 16px 0;border-radius:24px;background:var(--ink);color:#F3F5F8;padding:26px 22px 18px;position:relative;overflow:hidden}
+.vod::before{content:"";position:absolute;width:260px;height:260px;right:-90px;top:-110px;border-radius:50%;background:radial-gradient(circle,rgba(217,162,59,.55),rgba(217,162,59,0) 68%)}
+.vod .k{font-size:13px;color:#C9D1DC;position:relative}
+.vod blockquote{font-family:var(--serif);font-size:23px;line-height:1.4;margin:10px 0 12px;position:relative}
+.vod .ref{color:var(--lamp);font-weight:600;font-size:14px;position:relative}
+.vod .row{display:flex;gap:8px;margin-top:18px;position:relative}
+.pill{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:#fff;border-radius:999px;padding:8px 14px;font-size:14px;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.sect{margin:30px 0 0}
+.sect h3{font-family:var(--serif);font-weight:500;font-size:22px;margin:0 20px 10px}
+.moods{margin:0 16px;background:var(--paper);border-radius:20px;overflow:hidden}
+.moods button{display:flex;align-items:center;gap:14px;width:100%;border:0;background:none;text-align:left;padding:15px 16px;border-top:1px solid var(--line);font-family:var(--serif);font-size:19px}
+.moods button:first-child{border-top:0}
+.moods button:hover{background:#F7F9FB}
+.moods .dot{width:10px;height:10px;border-radius:50%;background:var(--lamp);box-shadow:0 0 0 5px rgba(217,162,59,.18);flex:none}
+.moods .chev{margin-left:auto;color:var(--ink3)}
+.plancard{margin:0 16px;background:var(--paper);border-radius:20px;padding:18px;display:flex;gap:16px;align-items:center;border:0;width:calc(100% - 32px);text-align:left}
+.ring{--p:0;width:58px;height:58px;border-radius:50%;flex:none;background:conic-gradient(var(--olive) calc(var(--p)*1%),var(--olivebg) 0);display:grid;place-items:center}
+.ring span{width:46px;height:46px;border-radius:50%;background:var(--paper);display:grid;place-items:center;font-weight:700;font-size:15px}
+.plancard b{display:block;font-size:16px}
+.plancard small{color:var(--ink2);font-size:14px}
+.unlock{margin:30px 16px 0;border-radius:20px;background:var(--olivebg);padding:20px}
+.unlock p{margin:4px 0 14px;color:var(--ink2);font-size:15px;line-height:1.45}
+.unlock b{font-size:17px}
+.btn{border:0;border-radius:14px;background:var(--ink);color:#fff;font-weight:600;font-size:16px;padding:14px 18px;width:100%}
+.btn.lamp{background:var(--lamp);color:var(--ink)}
+.btn.ghost{background:none;color:var(--ink2);font-weight:500}
+.favlist{margin:0 16px;display:flex;flex-direction:column;gap:8px}
+
+/* banners */
+.banner{margin:30px 16px 0;border-radius:20px;padding:18px;display:flex;gap:14px;align-items:center;position:relative;border:1px solid var(--line);background:var(--paper)}
+.banner .art{width:64px;height:80px;border-radius:8px;flex:none;display:grid;place-items:center;color:#fff;font-family:var(--serif);font-size:12px;text-align:center;padding:6px;line-height:1.15}
+.banner b{display:block;font-size:16px;line-height:1.25}
+.banner p{margin:4px 0 8px;font-size:14px;color:var(--ink2);line-height:1.4}
+.banner .go{font-weight:600;font-size:14px;color:var(--lampdeep);background:none;border:0;padding:0}
+.banner>div:nth-child(2){padding-right:18px}
+.banner .x{position:absolute;right:6px;top:6px;width:30px;height:30px;border:0;background:none;color:var(--ink3);border-radius:50%}
+.banners{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:0 16px;margin-top:30px}
+.banners .banner{margin:0;min-width:86%;scroll-snap-align:center}
+.adtag{font-size:12px;color:var(--ink3);margin:30px 20px -20px}
+
+/* lists */
+.search{margin:4px 16px 14px;display:flex;align-items:center;gap:8px;background:var(--paper);border-radius:14px;padding:0 14px;border:1px solid var(--line)}
+.search input{border:0;outline:0;font:inherit;font-size:16px;padding:12px 0;flex:1;background:none;color:var(--ink)}
+.chips{display:flex;gap:8px;padding:0 16px 12px;overflow-x:auto}
+.chip{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:7px 14px;font-size:14px;white-space:nowrap}
+.chip[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.list{margin:0 16px;background:var(--paper);border-radius:20px;overflow:hidden}
+.item{display:flex;align-items:center;gap:14px;width:100%;border:0;background:none;text-align:left;padding:14px 16px;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.item:hover{background:#F7F9FB}
+.num{width:40px;height:40px;border-radius:12px;background:var(--mist);display:grid;place-items:center;font-family:var(--serif);font-weight:600;font-size:16px;flex:none}
+.item .t{flex:1;min-width:0}
+.item .t b{display:block;font-weight:600;font-size:16px;line-height:1.3}
+.item .t small{display:block;color:var(--ink2);font-size:14px;margin-top:2px;line-height:1.35}
+.free{font-size:12px;font-weight:700;color:var(--olive);background:var(--olivebg);border-radius:6px;padding:3px 7px;flex:none}
+.lock{color:var(--ink3);flex:none}
+.cats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 16px}
+.cat{border:0;background:var(--paper);border-radius:18px;padding:16px;text-align:left;min-height:96px;display:flex;flex-direction:column;justify-content:space-between}
+.cat b{font-family:var(--serif);font-weight:500;font-size:18px;line-height:1.2}
+.cat small{color:var(--ink3);font-size:13px}
+
+/* reader */
+.reader{padding:4px 20px 0}
+.reader .kicker{font-size:14px;color:var(--ink3);font-weight:600}
+.reader h1{font-family:var(--serif);font-weight:500;font-size:30px;line-height:1.2;margin:4px 0 14px}
+.reader .intro{font-family:var(--serif);font-size:calc(var(--fs) - 1px);line-height:1.65;color:var(--ink2);margin:0 0 8px}
+.tools{display:flex;gap:8px;margin:16px 0 6px;flex-wrap:wrap}
+.tool{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:8px 14px;font-size:14px;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.tool[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.blk{margin:26px 0 0}
+.verse{font-family:var(--serif);font-size:calc(var(--fs) + 3px);line-height:1.6;margin:0}
+.verse sup{font-family:var(--sans);font-size:12px;font-weight:700;color:var(--lampdeep);margin-right:4px;vertical-align:4px}
+.note{margin-top:12px;font-size:var(--fs);line-height:1.6;color:var(--ink)}
+.note .lbl{font-weight:700;font-size:14px;color:var(--ink2);display:block;margin-bottom:2px}
+.note.life{border-left:3px solid var(--olive);padding-left:12px}
+.question{margin:32px 0 0;background:var(--paper);border-radius:18px;padding:18px}
+.question b{font-size:14px;color:var(--ink2)}
+.question p{font-family:var(--serif);font-size:20px;line-height:1.45;margin:6px 0 0}
+.supers{font-style:italic;font-family:var(--serif);color:var(--ink3);font-size:15px;margin:0 0 4px}
+.prayertext p{font-family:var(--serif);font-size:calc(var(--fs) + 1px);line-height:1.75;margin:0 0 16px}
+.tip{background:var(--paper);border-radius:16px;padding:16px;font-size:16px;line-height:1.55;color:var(--ink2);margin-top:8px}
+.fade{position:relative;max-height:430px;overflow:hidden}
+.fade::after{content:"";position:absolute;inset:auto 0 0 0;height:160px;background:linear-gradient(rgba(238,241,245,0),var(--mist))}
+.gate{margin:6px 0 0;background:var(--paper);border-radius:22px;padding:22px 20px;text-align:center}
+.gate h4{font-family:var(--serif);font-weight:500;font-size:22px;margin:0 0 6px;line-height:1.25}
+.gate p{margin:0 0 16px;color:var(--ink2);font-size:15px;line-height:1.45}
+.done{margin:30px 0 0}
+.day .vcard{background:var(--ink);color:#F3F5F8;border-radius:20px;padding:22px;margin-top:6px}
+.day .vcard p{font-family:var(--serif);font-size:20px;line-height:1.5;margin:0 0 10px}
+.day .vcard span{color:var(--lamp);font-weight:600;font-size:14px}
+.day h3{font-family:var(--serif);font-weight:500;font-size:21px;margin:30px 0 8px}
+.day .refl p{font-family:var(--serif);font-size:var(--fs);line-height:1.7;margin:0 0 14px}
+.day textarea{width:100%;min-height:96px;border:1px solid var(--line);border-radius:14px;padding:12px;font:inherit;font-size:16px;resize:vertical;background:var(--paper)}
+.days{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:0 16px}
+.dbtn{aspect-ratio:1;border:0;border-radius:14px;background:var(--paper);font-weight:700;font-size:16px;display:grid;place-items:center;position:relative}
+.dbtn.ok{background:var(--olive);color:#fff}
+.dbtn.next{box-shadow:inset 0 0 0 2px var(--lamp)}
+.dbtn .lock{position:absolute;right:5px;top:5px}
+.dbtn.locked{color:var(--ink3)}
+.planhead{margin:4px 16px 18px;background:var(--paper);border-radius:20px;padding:18px}
+.planhead h1{font-family:var(--serif);font-weight:500;font-size:26px;margin:0 0 6px}
+.planhead p{margin:0;color:var(--ink2);font-size:15px;line-height:1.45}
+.soon{margin:14px 16px 0;display:flex;flex-direction:column;gap:10px}
+.soon div{background:var(--paper);border-radius:18px;padding:16px;opacity:.85}
+.soon b{font-family:var(--serif);font-weight:500;font-size:18px}
+.soon small{display:block;color:var(--ink3);font-size:13px;margin-top:4px}
+
+/* sheets */
+.scrim{position:absolute;inset:0;background:rgba(16,23,31,.5);z-index:40;display:flex;align-items:flex-end;animation:fadein .2s}
+.sheet{background:var(--paper);width:100%;border-radius:26px 26px 0 0;padding:10px 22px 26px;max-height:92%;overflow:auto;animation:up .28s cubic-bezier(.2,.8,.2,1)}
+@keyframes up{from{transform:translateY(40px);opacity:.3}to{transform:none;opacity:1}}
+@keyframes fadein{from{opacity:0}}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 14px}
+.sheet h2{font-family:var(--serif);font-weight:500;font-size:26px;line-height:1.2;margin:4px 0 6px}
+.sheet .sub{color:var(--ink2);margin:0 0 16px;font-size:15px;line-height:1.45}
+.ticks{list-style:none;padding:0;margin:0 0 18px}
+.ticks li{display:flex;gap:10px;padding:8px 0;font-size:16px;line-height:1.35;border-top:1px solid var(--line)}
+.ticks li:first-child{border-top:0}
+.ticks svg{flex:none;color:var(--olive);margin-top:1px}
+.price{display:flex;align-items:baseline;gap:10px;margin:0 0 14px}
+.price b{font-size:32px;font-family:var(--serif);font-weight:600}
+.price s{color:var(--ink3);font-size:16px}
+.price span{font-size:14px;color:var(--olive);font-weight:600}
+.fine{font-size:13px;color:var(--ink3);text-align:center;margin:12px 0 0}
+.okmark{width:56px;height:56px;border-radius:50%;background:var(--olivebg);color:var(--olive);display:grid;place-items:center;margin:6px 0 10px}
+.oto{border:2px solid var(--lamp);border-radius:18px;padding:16px;margin:16px 0}
+.oto .tag{font-size:13px;font-weight:700;color:var(--lampdeep)}
+.shareimg{width:100%;border-radius:16px;display:block;margin:6px 0 10px}
+.toast{position:absolute;left:50%;bottom:92px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:50;white-space:nowrap}
+.empty{padding:40px 24px;text-align:center;color:var(--ink2)}
+/* modo embebido: #demo (dentro da página de vendas) e #app (app real, sem painel) */
+.embed .panel,.embed .panel-toggle{display:none!important}
+.embed body{background:var(--mist)}
+.embed .stage{padding:0;display:block}
+.embed .phone{width:100%;height:100vh;height:100dvh;border-radius:0;box-shadow:none}
+</style>
+<script>if(location.hash!=='#preview')document.documentElement.classList.add('embed')</script>
+</head>
+<body>
+<button class="panel-toggle" id="ptoggle" aria-expanded="false">Prévia</button>
+<div class="stage">
+  <aside class="panel" id="panel" aria-label="Controles da prévia">
+    <h1>Prévia do app Palabra con Poder</h1>
+    <p>Teste o app como um visitante que acabou de instalar e como um cliente que já comprou. O app fica em espanhol; este painel é só para você.</p>
+    <h2>Ver o app como</h2>
+    <div class="seg" id="modes">
+      <button data-mode="free">Visitante grátis<small>Vê os trechos grátis e os cadeados</small></button>
+      <button data-mode="paid">Cliente — recusou o upsell<small>Tudo liberado, com banners de outros produtos</small></button>
+      <button data-mode="all">Cliente — aceitou o upsell<small>Tudo liberado, banners só de produtos que ele não tem</small></button>
+    </div>
+    <h2>O que é grátis</h2>
+    <ul>
+      <li>7 salmos completos (1, 23, 27, 46, 51, 91, 121)</li>
+      <li>Início de todos os outros salmos, cortado no melhor ponto</li>
+      <li>1 oração completa por situação</li>
+      <li>Dias 1 a 3 do plano de 30 dias</li>
+      <li>Versículo do dia com imagem para compartilhar</li>
+    </ul>
+    <h2>Ainda não é real</h2>
+    <ul>
+      <li>Preços (US$ 9,90 e US$ 14,90) e o checkout: o botão de compra só simula</li>
+      <li>Login e liberação via Hotmart</li>
+      <li>Planos de 21 dias, Hogar Blindado e 52 semanas: entram na próxima rodada de revisão</li>
+    </ul>
+    <p style="margin-top:16px"><button class="linkbtn" id="reset">Zerar progresso e favoritos</button></p>
+  </aside>
+  <div class="phone"><div class="app" id="app"></div></div>
+</div>
+
+<script>
+(()=>{
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const store={get(k,d){try{const v=localStorage.getItem('pcp_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('pcp_'+k,JSON.stringify(v))}catch(e){}}};
+
+const I={
+ back:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+ chev:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>',
+ lock:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>',
+ sun:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+ book:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2z"/><path d="M4 21V5M8 7h7"/></svg>',
+ hands:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v8M9 21l-4-4V9a2 2 0 014 0v4M15 21l4-4V9a2 2 0 00-4 0v4M9 13l3-1 3 1"/></svg>',
+ path:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h6a4 4 0 000-8h-4a4 4 0 010-8h6"/></svg>',
+ play:'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4l13 8-13 8z"/></svg>',
+ stop:'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
+ heart:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></svg>',
+ heartf:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></svg>',
+ share:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 002 2h10a2 2 0 002-2v-6"/></svg>',
+ tick:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4 10-10"/></svg>',
+ search:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+ x:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+};
+
+const FREE_PS=[1,23,27,46,51,91,121];
+const MOODS=[
+ {id:'ansiedad',t:'Siento ansiedad o miedo',ps:[23,91,27,46,56,34],cat:'ansiedad'},
+ {id:'paz',t:'Necesito paz',ps:[4,62,131,29,116],cat:'paz'},
+ {id:'familia',t:'Oro por mi familia',ps:[127,128,133,101],cat:'familia'},
+ {id:'hijos',t:'Oro por mis hijos',ps:[127,128,78,112],cat:'hijos'},
+ {id:'pareja',t:'Mi matrimonio',ps:[128,133,85,45],cat:'pareja'},
+ {id:'trabajo',t:'Trabajo y provisión',ps:[37,90,127,112,23],cat:'trabajo'},
+ {id:'decisiones',t:'Tengo que tomar una decisión',ps:[25,32,143,119],cat:'decisiones'},
+ {id:'fe',t:'Mi fe está débil',ps:[42,73,77,13,121],cat:'fe'},
+ {id:'perdon',t:'Necesito perdón',ps:[51,32,103,130],cat:null},
+ {id:'manana',t:'Quiero empezar el día con Dios',ps:[5,90,118,143,121],cat:'manana'},
+];
+const VOD=[[23,1],[91,1],[46,1],[121,2],[27,1],[34,18],[37,5],[55,22],[56,3],[62,1],[118,24],[139,14],[103,2],[30,5],[145,18],[119,105],[4,8],[16,8],[18,2],[28,7],[31,24],[32,8],[40,1],[42,11],[63,1],[73,26],[84,11],[86,5],[90,12],[100,4],[107,1],[112,7],[126,5],[147,3],[16,11]];
+
+/* ===== CONFIGURAÇÃO (edite aqui) ===== */
+const CONFIG={
+  checkout:'',          // link do checkout Hotmart do Plano Completo
+  upsell:'',            // link do checkout da Biblioteca de Estudo (upsell)
+  links:{biblioteca:'',finanzas:'',ninos:''}, // páginas de venda dos banners
+  // Página de obrigado da Hotmart deve abrir: https://SEU-DOMINIO/app/#acceso-3f385a2a
+  activar:{'acceso-3f385a2a':'paid','biblioteca-1e145dbf':'all'}
+};
+/* ====================================== */
+const PREVIEW=location.hash==='#preview';
+const DEMO=location.hash==='#demo';
+function checkActivation(){const k=location.hash.slice(1);const m=CONFIG.activar[k];if(!m)return null;try{const cur=localStorage.getItem('pcp_mode');const v=(m==='paid'&&cur==='"all"')?'all':m;localStorage.setItem('pcp_mode',JSON.stringify(v))}catch(e){}history.replaceState(null,'',location.pathname);return m}
+window.__activated=checkActivation();
+window.addEventListener('hashchange',()=>{if(checkActivation())location.reload()});
+let D={}, S={
+  mode:DEMO?'free':store.get('mode','free'), tab:'hoy', stack:[], done:store.get('done',[]),
+  favs:store.get('favs',[]), notes:store.get('notes',{}), fs:store.get('fs',18), hidden:{}, seenUpsell:false
+};
+const paid=()=>S.mode!=='free', hasUpsell=()=>S.mode==='all';
+const psFree=n=>paid()||FREE_PS.includes(n);
+let firstOfCat={};
+const prFree=p=>paid()||firstOfCat[p.cat]===p.id;
+const dayFree=d=>paid()||d<=3;
+
+/* ---------- audio ---------- */
+let speaking=null;
+function speak(text,key){
+  const ss=window.speechSynthesis;
+  if(!ss){toast('Tu navegador no permite audio');return}
+  if(speaking===key){ss.cancel();speaking=null;render();return}
+  ss.cancel();
+  const u=new SpeechSynthesisUtterance(text);u.lang='es-ES';u.rate=.92;
+  const v=ss.getVoices().find(v=>/^es/i.test(v.lang));if(v)u.voice=v;
+  u.onend=()=>{if(speaking===key){speaking=null;render()}};
+  speaking=key;try{ss.speak(u)}catch(e){speaking=null;toast('No se pudo reproducir el audio')}
+  render();
+}
+function stopAudio(){try{speechSynthesis.cancel()}catch(e){}speaking=null}
+
+/* ---------- helpers ---------- */
+const P=n=>D.psalms[n-1];
+function verseText(n,v){for(const b of P(n).blocks){const t=b.text.find(x=>x.v===v);if(t)return t.t}return ''}
+function vodToday(){const d=new Date(),s=new Date(d.getFullYear(),0,0),i=Math.floor((d-s)/864e5)%VOD.length;const [n,v]=VOD[i];return{n,v,t:verseText(n,v),ref:`Salmo ${n}:${v}`}}
+function greet(){const h=new Date().getHours();return h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches'}
+function nextDay(){for(let i=1;i<=30;i++)if(!S.done.includes(i))return i;return 30}
+function isFav(k){return S.favs.includes(k)}
+function togFav(k){S.favs=isFav(k)?S.favs.filter(x=>x!==k):[...S.favs,k];store.set('favs',S.favs);toast(isFav(k)?'Guardado en favoritos':'Quitado de favoritos');render()}
+function toast(m){const a=$('#app');const t=document.createElement('div');t.className='toast';t.textContent=m;a.appendChild(t);setTimeout(()=>t.remove(),1900)}
+function go(view){stopAudio();S.stack.push(view);render(true)}
+function back(){stopAudio();S.stack.pop();render(true)}
+function setTab(t){stopAudio();S.tab=t;S.stack=[];render(true)}
+
+/* ---------- banners (post-compra) ---------- */
+const BAN={
+ biblioteca:{t:'Biblioteca de Estudio Bíblico',d:'Los 4 Evangelios y Proverbios explicados versículo por versículo.',cta:'Ver la biblioteca',art:'Evangelios y Proverbios',bg:'#1D2A3B',upsell:true},
+ finanzas:{t:'La Sabiduría Bíblica en tus Finanzas',d:'10 claves bíblicas para salir de las deudas y administrar con propósito.',cta:'Conocer el libro',art:'Finanzas con fe',bg:'#56653C'},
+ ninos:{t:'Corazones Agradecidos',d:'Diario de gratitud y fe para niños, con actividades para colorear.',cta:'Ver el diario',art:'Para niños',bg:'#9A6B12'}
+};
+function bannerHTML(k,ctx){
+  const b=BAN[k]; if(!b||S.hidden[k+ctx])return '';
+  if(b.upsell&&hasUpsell())return '';
+  return `<div class="banner"><div class="art" style="background:${b.bg}">${esc(b.art)}</div><div><b>${esc(b.t)}</b><p>${esc(b.d)}</p><button class="go" data-act="banner" data-k="${k}">${esc(b.cta)}</button></div><button class="x" aria-label="Cerrar" data-act="hideban" data-k="${k+ctx}">${I.x}</button></div>`;
+}
+function ctxBanner(kind){ // banner contextual al final de una lectura
+  if(!paid())return '';
+  const k=kind==='trabajo'?'finanzas':kind==='hijos'||kind==='familia'?'ninos':'biblioteca';
+  if(BAN[k].upsell&&hasUpsell())return bannerHTML('finanzas','c'+kind);
+  return bannerHTML(k,'c'+kind);
+}
+
+/* ---------- vistas ---------- */
+function vHome(){
+  const v=vodToday(), nd=nextDay(), pct=Math.round(S.done.length/30*100);
+  let h=`<div class="hello"><div class="brand">Palabra con Poder</div><h1>${greet()}</h1></div>
+  <section class="vod" aria-label="Versículo del día"><div class="k">Versículo del día</div>
+   <blockquote>${esc(v.t)}</blockquote><div class="ref">${esc(v.ref)}</div>
+   <div class="row"><button class="pill" data-act="share">${I.share} Compartir</button><button class="pill" data-act="psalm" data-n="${v.n}">Leer el salmo</button></div></section>
+  <div class="sect"><h3>¿Qué estás viviendo hoy?</h3><div class="moods">
+   ${MOODS.map(m=>`<button data-act="mood" data-id="${m.id}"><span class="dot"></span>${esc(m.t)}<span class="chev">${I.chev}</span></button>`).join('')}
+  </div></div>
+  <div class="sect"><h3>Tu tiempo con Dios</h3><button class="plancard" data-act="day" data-d="${nd}"><div class="ring" style="--p:${pct}"><span>${S.done.length}</span></div><div><b>Conexión Vital · Día ${nd}</b><small>${esc(D.plan[nd-1].title)} — 15 minutos</small></div></button></div>`;
+  if(!DEMO&&!standalone()&&!S.hideInstall){
+    h+=`<div class="unlock" style="background:var(--paper);margin-top:24px"><b>Instala la app en tu celular</b><p>Ábrela con un toque desde tu pantalla de inicio, como cualquier otra app. Funciona sin internet.</p><button class="btn lamp" data-act="install">Instalar la app</button></div>`;
+  }
+  if(S.favs.length){
+    h+=`<div class="sect"><h3>Tus favoritos</h3><div class="list">${S.favs.slice(-4).reverse().map(favItem).join('')}</div></div>`;
+  }
+  if(!paid()){
+    h+=`<div class="unlock"><b>Estás usando la versión gratuita</b><p>Tienes 7 salmos completos, una oración por cada situación y los primeros 3 días del plan. Con el plan completo abres los 150 Salmos, 188 oraciones y los 30 días.</p><button class="btn" data-act="paywall">Ver el plan completo</button></div>`;
+  } else {
+    const ks=['biblioteca','finanzas','ninos'].filter(k=>!(BAN[k].upsell&&hasUpsell())&&!S.hidden[k+'h']);
+    if(ks.length)h+=`<div class="adtag">Recomendado para ti</div><div class="banners">${ks.map(k=>bannerHTML(k,'h')).join('')}</div>`;
+  }
+  return h;
+}
+function favItem(k){
+  const [type,id]=k.split(':');
+  if(type==='ps'){const p=P(+id);return `<button class="item" data-act="psalm" data-n="${p.n}"><div class="num">${p.n}</div><div class="t"><b>${esc(p.title)}</b><small>Salmo ${p.n}</small></div></button>`}
+  const p=D.prayers.items.find(x=>x.id===id); if(!p)return '';
+  return `<button class="item" data-act="prayer" data-id="${p.id}"><div class="t"><b>${esc(p.title)}</b><small>${esc(D.prayers.cats[p.cat])}</small></div></button>`;
+}
+function psRow(n){const p=P(n);return `<button class="item" data-act="psalm" data-n="${n}"><div class="num">${n}</div><div class="t"><b>${esc(p.title)}</b><small>${p.blocks.length} enseñanzas</small></div>${psFree(n)?(paid()?'':'<span class="free">Gratis</span>'):`<span class="lock">${I.lock}</span>`}</button>`}
+function prRow(p){return `<button class="item" data-act="prayer" data-id="${p.id}"><div class="t"><b>${esc(p.title.replace(/^Oración (para|por|de) /,'').replace(/^./,c=>c.toUpperCase()))}</b><small>${esc(D.prayers.cats[p.cat])}</small></div>${prFree(p)?(paid()?'':'<span class="free">Gratis</span>'):`<span class="lock">${I.lock}</span>`}</button>`}
+function vMood(id){
+  const m=MOODS.find(x=>x.id===id);
+  const prs=m.cat?D.prayers.items.filter(p=>p.cat===m.cat):[];
+  prs.sort((a,b)=>prFree(b)-prFree(a));
+  return top(m.t)+`<div class="sect" style="margin-top:6px"><h3>Salmos para este momento</h3><div class="list">${m.ps.map(psRow).join('')}</div></div>`+
+   (prs.length?`<div class="sect"><h3>Oraciones</h3><div class="list">${prs.slice(0,8).map(prRow).join('')}</div>${prs.length>8?`<div class="pad" style="margin-top:10px"><button class="btn ghost" data-act="cat" data-c="${m.cat}">Ver las ${prs.length} oraciones</button></div>`:''}</div>`:'');
+}
+function vPsalms(){
+  const q=(S.q||'').toLowerCase().trim();
+  let ns=D.psalms.map(p=>p.n);
+  if(S.psf==='free')ns=ns.filter(n=>FREE_PS.includes(n));
+  if(S.psf==='fav')ns=ns.filter(n=>isFav('ps:'+n));
+  if(q)ns=ns.filter(n=>String(n)===q||P(n).title.toLowerCase().includes(q)||P(n).intro.toLowerCase().includes(q));
+  return `<div class="topbar"><h2 style="font-family:var(--serif);font-size:26px;font-weight:500">Salmos</h2></div>
+  <label class="search">${I.search}<input id="q" type="search" placeholder="Busca por número o tema" value="${esc(S.q||'')}" aria-label="Buscar salmo"></label>
+  <div class="chips">${[['all','Todos'],...(paid()?[]:[['free','Gratis']]),['fav','Favoritos']].map(([k,t])=>`<button class="chip" aria-pressed="${(S.psf||'all')===k}" data-act="psf" data-k="${k}">${t}</button>`).join('')}</div>
+  ${ns.length?`<div class="list">${ns.map(psRow).join('')}</div>`:`<div class="empty">No hay salmos con ese criterio. Prueba otro número o palabra.</div>`}`;
+}
+function vPsalm(n){
+  const p=P(n), open=psFree(n), fav=isFav('ps:'+n);
+  const allText=[p.title,p.intro,...p.blocks.map(b=>b.text.map(t=>t.t).join(' ')+'. '+b.exp+' '+b.app)].join('. ');
+  const blk=b=>`<div class="blk">${b.label?`<div class="kicker" style="font-size:13px;color:var(--ink3);font-weight:600;margin-bottom:6px">${esc(b.label)}</div>`:''}<p class="verse">${b.text.map(t=>`<sup>${t.v}</sup>${esc(t.t)}`).join(' ')}</p>
+   <div class="note"><span class="lbl">Explicación</span>${esc(b.exp)}</div><div class="note life"><span class="lbl">Para tu vida</span>${esc(b.app)}</div></div>`;
+  let h=top('Salmo '+n,`<button class="iconbtn" aria-pressed="${fav}" aria-label="Favorito" data-act="fav" data-k="ps:${n}">${fav?I.heartf:I.heart}</button>`)+
+  `<article class="reader"><h1>${esc(p.title)}</h1><p class="intro">${esc(p.intro)}</p>`;
+  if(open){
+    h+=`<div class="tools"><button class="tool" aria-pressed="${speaking==='ps'+n}" data-act="listen" data-k="ps${n}">${speaking==='ps'+n?I.stop+' Detener':I.play+' Escuchar'}</button><button class="tool" data-act="fs" data-d="-1" aria-label="Letra más pequeña">A−</button><button class="tool" data-act="fs" data-d="1" aria-label="Letra más grande">A+</button></div>`;
+    if(p.superscription)h+=`<p class="supers">${esc(p.superscription)}</p>`;
+    h+=p.blocks.map(blk).join('');
+    if(p.conclusion)h+=`<p class="intro" style="margin-top:26px">${esc(p.conclusion)}</p>`;
+    if(p.question)h+=`<div class="question"><b>Pregunta para reflexionar</b><p>${esc(p.question)}</p></div>`;
+    h+=`</article>`+ctxBanner('salmo');
+    S._listen={['ps'+n]:allText};
+  } else {
+    h+=`<div class="fade">${p.blocks.slice(0,2).map(blk).join('')}</div>
+    <div class="gate"><h4>Sigue leyendo el Salmo ${n}</h4><p>Faltan ${p.blocks.length-1} enseñanzas de este salmo. Con el plan completo abres los 150 Salmos explicados, con audio.</p><button class="btn" data-act="paywall">Desbloquear todo</button></div></article>`;
+  }
+  return h;
+}
+function vPrayers(){
+  const C=D.prayers.cats, cnt={};D.prayers.items.forEach(p=>cnt[p.cat]=(cnt[p.cat]||0)+1);
+  return `<div class="topbar"><h2 style="font-family:var(--serif);font-size:26px;font-weight:500">Oraciones</h2></div>
+   <p class="pad" style="margin:0 0 14px;color:var(--ink2)">Elige lo que necesitas hoy.</p>
+   <div class="cats">${Object.keys(C).map(k=>`<button class="cat" data-act="cat" data-c="${k}"><b>${esc(C[k])}</b><small>${cnt[k]} oraciones</small></button>`).join('')}</div>`;
+}
+function vCat(c){
+  const ps=D.prayers.items.filter(p=>p.cat===c).sort((a,b)=>prFree(b)-prFree(a));
+  return top(D.prayers.cats[c])+`<div class="list">${ps.map(prRow).join('')}</div>`;
+}
+function vPrayer(id){
+  const p=D.prayers.items.find(x=>x.id===id), open=prFree(p), fav=isFav('pr:'+id);
+  const paras=p.text.split(/\n\n+/);
+  let h=top(D.prayers.cats[p.cat],`<button class="iconbtn" aria-pressed="${fav}" aria-label="Favorito" data-act="fav" data-k="pr:${id}">${fav?I.heartf:I.heart}</button>`)+
+  `<article class="reader"><h1>${esc(p.title)}</h1>${p.intro?`<p class="intro">${esc(p.intro)}</p>`:''}`;
+  if(open){
+    h+=`<div class="tools"><button class="tool" aria-pressed="${speaking==='pr'+id}" data-act="listen" data-k="pr${id}">${speaking==='pr'+id?I.stop+' Detener':I.play+' Escuchar'}</button><button class="tool" data-act="fs" data-d="-1" aria-label="Letra más pequeña">A−</button><button class="tool" data-act="fs" data-d="1" aria-label="Letra más grande">A+</button></div>
+    <div class="prayertext" style="margin-top:18px">${paras.map(x=>`<p>${esc(x)}</p>`).join('')}</div>${p.tip?`<div class="tip">${esc(p.tip)}</div>`:''}</article>`+ctxBanner(p.cat);
+    S._listen={['pr'+id]:p.title+'. '+p.text};
+  } else {
+    h+=`<div class="fade prayertext" style="margin-top:18px"><p>${esc(paras[0])}</p></div><div class="gate"><h4>Termina esta oración</h4><p>Esta y otras ${D.prayers.items.length-9} oraciones para cada momento de tu vida están en el plan completo.</p><button class="btn" data-act="paywall">Desbloquear todo</button></div></article>`;
+  }
+  return h;
+}
+function vPlans(){
+  const nd=nextDay();
+  return `<div class="topbar"><h2 style="font-family:var(--serif);font-size:26px;font-weight:500">Planes</h2></div>
+  <div class="planhead"><h1>Conexión Vital</h1><p>30 días, 15 minutos al día: una Palabra, una reflexión, una oración y un desafío práctico. ${paid()?'':'Los días 1, 2 y 3 son gratis.'}</p>
+   <div style="margin-top:14px"><button class="btn lamp" data-act="day" data-d="${nd}">${S.done.length?'Continuar con el día '+nd:'Empezar el día 1'}</button></div></div>
+  <div class="days">${D.plan.map(d=>{const ok=S.done.includes(d.day),lk=!dayFree(d.day);return `<button class="dbtn ${ok?'ok':''} ${d.day===nd&&!ok?'next':''} ${lk?'locked':''}" data-act="day" data-d="${d.day}" aria-label="Día ${d.day}${ok?', completado':''}${lk?', bloqueado':''}">${ok?I.tick:d.day}${lk?`<span class="lock">${I.lock}</span>`:''}</button>`}).join('')}</div>
+  <div class="sect"><h3>Próximamente</h3><div class="soon">
+   <div><b>21 días de oración: apertura de caminos</b><small>Reflexión, oración y declaración para cada día</small></div>
+   <div><b>Hogar Blindado</b><small>Un plan para consagrar y proteger tu hogar</small></div>
+   <div><b>52 semanas en familia</b><small>Un devocional por semana para pareja, hijos y trabajo</small></div>
+  </div></div>`;
+}
+function vDay(n){
+  const d=D.plan[n-1];
+  if(!dayFree(n))return top('Día '+n)+`<div class="reader"><h1>${esc(d.title)}</h1><div class="vcard" style="background:var(--ink);color:#F3F5F8;border-radius:20px;padding:22px"><p style="font-family:var(--serif);font-size:20px;line-height:1.5;margin:0 0 10px">${esc(d.verse.t)}</p><span style="color:var(--lamp);font-weight:600;font-size:14px">${esc(d.verse.ref)}</span></div>
+   <div class="gate" style="margin-top:16px"><h4>Tu día ${n} te espera</h4><p>${S.done.length>=3?'Ya completaste 3 días. No pierdas el ritmo: ':''}Desbloquea los 30 días de Conexión Vital y todo el contenido del app.</p><button class="btn" data-act="paywall">Desbloquear todo</button></div></div>`;
+  const ok=S.done.includes(n);
+  S._listen={['day'+n]:d.title+'. '+d.verse.t+'. '+d.reflection+'. '+d.prayer};
+  return top('Conexión Vital · Día '+n)+`<article class="reader day"><h1>${esc(d.title)}</h1>
+   <div class="vcard"><p>${esc(d.verse.t)}</p><span>${esc(d.verse.ref)}</span></div>
+   <div class="tools"><button class="tool" aria-pressed="${speaking==='day'+n}" data-act="listen" data-k="day${n}">${speaking==='day'+n?I.stop+' Detener':I.play+' Escuchar'}</button></div>
+   <h3>Reflexión</h3><div class="refl">${d.reflection.split(/\n\n+/).map(x=>`<p>${esc(x)}</p>`).join('')}</div>
+   <h3>Oración</h3><div class="prayertext"><p>${esc(d.prayer)}</p></div>
+   <h3>Desafío de hoy</h3><div class="tip" style="color:var(--ink)">${esc(d.challenge)}</div>
+   <h3>Tu espacio</h3><label for="note" style="display:block;color:var(--ink2);margin-bottom:8px;font-size:15px">${esc(d.question)}</label>
+   <textarea id="note" data-d="${n}" placeholder="Escribe aquí. Solo tú lo ves.">${esc(S.notes[n]||'')}</textarea>
+   <div class="done">${ok?`<button class="btn ghost" data-act="undo" data-d="${n}">Día completado ✓ · Desmarcar</button>`:`<button class="btn lamp" data-act="complete" data-d="${n}">Marcar el día ${n} como completado</button>`}</div></article>`;
+}
+function top(title,right=''){return `<div class="topbar"><button class="back" data-act="back" aria-label="Volver">${I.back}</button><h2>${esc(title)}</h2>${right}</div>`}
+
+/* ---------- sheets ---------- */
+function sheet(html){const a=$('#app');const s=document.createElement('div');s.className='scrim';s.innerHTML=`<div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div>`;s.addEventListener('click',e=>{if(e.target===s)s.remove()});a.appendChild(s);s.querySelector('button')?.focus();return s}
+function paywall(){
+  sheet(`<h2>Abre todos los Salmos y oraciones</h2><p class="sub">Todo lo que necesitas para orar y entender la Palabra, en tu celular.</p>
+  <ul class="ticks">${['Los 150 Salmos explicados versículo por versículo','188 oraciones para cada momento de tu vida','Los 30 días del plan Conexión Vital','Escucha cada salmo y oración en voz alta','Funciona sin internet una vez instalado'].map(t=>`<li>${I.tick}<span>${t}</span></li>`).join('')}</ul>
+  <div class="price"><b>US$ 9,90</b><s>US$ 27</s><span>Pago único</span></div>
+  <button class="btn lamp" data-act="buy">Desbloquear por US$ 9,90</button>
+  <p class="fine">Acceso para siempre. Garantía de 7 días: si no te gusta, te devolvemos tu dinero.</p>`);
+}
+function upsell(){
+  sheet(`<div class="okmark">${I.tick}</div><h2>¡Listo! Tu plan completo está activo</h2><p class="sub">Ya puedes leer los 150 Salmos y todas las oraciones.</p>
+  <div class="oto"><div class="tag">Oferta solo para hoy</div><h2 style="font-size:22px;margin-top:6px">Biblioteca de Estudio Bíblico</h2>
+   <ul class="ticks" style="margin-bottom:10px">${['Mateo, Marcos, Lucas y Juan explicados versículo por versículo','Los 31 capítulos de Proverbios explicados','300 versículos clave con su explicación'].map(t=>`<li>${I.tick}<span>${t}</span></li>`).join('')}</ul>
+   <div class="price" style="margin:0"><b>US$ 14,90</b><s>US$ 37</s></div></div>
+  <button class="btn lamp" data-act="upsell-yes">Agregar a mi plan</button><button class="btn ghost" data-act="upsell-no" style="margin-top:6px">No, gracias</button>`);
+}
+async function share(){
+  const v=vodToday();
+  const c=document.createElement('canvas');c.width=1080;c.height=1350;const x=c.getContext('2d');
+  try{await document.fonts.load('500 60px Literata');await document.fonts.load('600 32px Figtree')}catch(e){}
+  x.fillStyle='#1D2A3B';x.fillRect(0,0,1080,1350);
+  const g=x.createRadialGradient(900,160,0,900,160,520);g.addColorStop(0,'rgba(217,162,59,.6)');g.addColorStop(1,'rgba(217,162,59,0)');x.fillStyle=g;x.fillRect(0,0,1080,1350);
+  x.fillStyle='#F3F5F8';x.font='500 64px Literata, Georgia, serif';
+  const words=('“'+v.t+'”').split(' ');let lines=[],l='';
+  for(const w of words){const t=l?l+' '+w:w;if(x.measureText(t).width>880){lines.push(l);l=w}else l=t}lines.push(l);
+  let y=675-lines.length*46;lines.forEach(s=>{x.fillText(s,100,y);y+=92});
+  x.fillStyle='#D9A23B';x.font='600 40px Figtree, sans-serif';x.fillText(v.ref,100,y+40);
+  x.fillStyle='rgba(243,245,248,.7)';x.font='500 32px Figtree, sans-serif';x.fillText('@palabraconpoderr',100,1250);
+  const url=c.toDataURL('image/png');
+  const s=sheet(`<h2>Comparte el versículo</h2><p class="sub">Mantén presionada la imagen para guardarla o enviarla por WhatsApp.</p><img class="shareimg" src="${url}" alt="Imagen del versículo ${esc(v.ref)}"><button class="btn" data-act="copyv">Copiar el texto</button>`);
+}
+
+/* ---------- instalación (PWA) ---------- */
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;});
+window.addEventListener('appinstalled',()=>{S.hideInstall=true;render()});
+function standalone(){return matchMedia('(display-mode: standalone)').matches||navigator.standalone===true}
+function doInstall(){
+  if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.finally(()=>{deferredPrompt=null});return}
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  sheet(ios?`<h2>Instálala en tu iPhone</h2><ul class="ticks"><li>${I.tick}<span>Abre esta página en <b>Safari</b>.</span></li><li>${I.tick}<span>Toca el botón <b>Compartir</b> (el cuadrado con la flecha hacia arriba).</span></li><li>${I.tick}<span>Elige <b>Agregar a inicio</b> y toca <b>Agregar</b>.</span></li></ul>`
+   :`<h2>Instálala en tu celular</h2><ul class="ticks"><li>${I.tick}<span>Toca el menú del navegador (los tres puntos arriba a la derecha).</span></li><li>${I.tick}<span>Elige <b>Instalar app</b> o <b>Agregar a pantalla de inicio</b>.</span></li></ul>`);
+}
+if('serviceWorker' in navigator&&!DEMO&&!PREVIEW&&location.protocol==='https:'){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
+
+/* ---------- render ---------- */
+function render(scrollTop){
+  const app=$('#app'); const cur=S.stack[S.stack.length-1];
+  let body;
+  if(cur){const [t,a]=cur;body=t==='psalm'?vPsalm(+a):t==='mood'?vMood(a):t==='cat'?vCat(a):t==='prayer'?vPrayer(a):t==='day'?vDay(+a):''}
+  else body=S.tab==='hoy'?vHome():S.tab==='salmos'?vPsalms():S.tab==='oraciones'?vPrayers():vPlans();
+  const prev=$('.screen',app);const st=prev&&!scrollTop?prev.scrollTop:0;
+  const sheets=[...app.querySelectorAll('.scrim')];
+  app.innerHTML=`<main class="screen" style="--fs:${S.fs}px">${body}</main>
+  <nav class="tabs" aria-label="Secciones">${[['hoy','Hoy',I.sun],['salmos','Salmos',I.book],['oraciones','Oraciones',I.hands],['planes','Planes',I.path]].map(([k,t,ic])=>`<button data-act="tab" data-t="${k}" ${S.tab===k?'aria-current="page"':''}>${ic}${t}</button>`).join('')}</nav>`;
+  sheets.forEach(s=>app.appendChild(s));
+  $('.screen',app).scrollTop=st;
+  const q=$('#q');if(q){q.addEventListener('input',e=>{S.q=e.target.value;const pos=e.target.selectionStart;render();const n=$('#q');n.focus();n.setSelectionRange(pos,pos)})}
+  const note=$('#note');if(note)note.addEventListener('input',e=>{S.notes[e.target.dataset.d]=e.target.value;store.set('notes',S.notes)});
+  document.querySelectorAll('#modes button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===S.mode));
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act,ds=b.dataset;
+  const closeSheet=()=>b.closest('.scrim')?.remove();
+  switch(a){
+   case'tab':setTab(ds.t);break;
+   case'back':back();break;
+   case'mood':go(['mood',ds.id]);break;
+   case'psalm':closeSheet();go(['psalm',ds.n]);break;
+   case'cat':go(['cat',ds.c]);break;
+   case'prayer':go(['prayer',ds.id]);break;
+   case'day':go(['day',ds.d]);break;
+   case'psf':S.psf=ds.k;render();break;
+   case'fav':togFav(ds.k);break;
+   case'fs':S.fs=Math.max(15,Math.min(24,S.fs+ +ds.d));store.set('fs',S.fs);render();break;
+   case'listen':speak((S._listen||{})[ds.k]||'',ds.k);break;
+   case'complete':{const n=+ds.d;if(!S.done.includes(n))S.done.push(n);store.set('done',S.done);toast('Día '+n+' completado');
+     if(!paid()&&n===3){render();setTimeout(paywall,500)}else{S.stack.pop();go(['day',nextDay()])}break}
+   case'undo':S.done=S.done.filter(x=>x!==+ds.d);store.set('done',S.done);render();break;
+   case'paywall':paywall();break;
+   case'buy':if(PREVIEW||DEMO){closeSheet();setMode('paid');setTimeout(upsell,250)}else openUrl(CONFIG.checkout,'El pago estará disponible muy pronto');break;
+   case'upsell-yes':if(PREVIEW||DEMO){closeSheet();setMode('all');toast('Biblioteca agregada a tu plan')}else openUrl(CONFIG.upsell,'Esta oferta estará disponible muy pronto');break;
+   case'upsell-no':closeSheet();break;
+   case'share':share();break;
+   case'copyv':{const v=vodToday();navigator.clipboard?.writeText(`“${v.t}” — ${v.ref}`).then(()=>toast('Texto copiado'),()=>toast('No se pudo copiar'));break}
+   case'hideban':S.hidden[ds.k]=1;render();break;
+   case'banner':if(PREVIEW||DEMO)toast('Aquí se abre la página de venta del producto');else openUrl(CONFIG.links[ds.k],'Muy pronto disponible');break;
+   case'install':doInstall();break;
+  }
+});
+function setMode(m){S.mode=m;if(!DEMO)store.set('mode',m);render()}
+function openUrl(u,fallback){if(u){location.href=u}else toast(fallback)}
+document.querySelectorAll('#modes button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.scrim').forEach(s=>s.remove());setMode(b.dataset.mode);$('#panel').classList.remove('open')}));
+$('#reset').addEventListener('click',()=>{S.done=[];S.favs=[];S.notes={};S.hidden={};['done','favs','notes'].forEach(k=>store.set(k,k==='notes'?{}:[]));render()});
+$('#ptoggle').addEventListener('click',()=>{const p=$('#panel');p.classList.toggle('open');$('#ptoggle').setAttribute('aria-expanded',p.classList.contains('open'))});
+
+Promise.all(['psalms','prayers','plan30'].map(f=>fetch('data/'+f+'.json').then(r=>r.json()))).then(([ps,pr,pl])=>{
+  D={psalms:ps,prayers:pr,plan:pl};
+  pr.items.forEach(p=>{if(!firstOfCat[p.cat])firstOfCat[p.cat]=p.id});
+  render(true);
+  if(window.__activated){setTimeout(()=>{if(window.__activated==='paid'){upsell()}else toast('¡Listo! Todo tu contenido está desbloqueado')},400)}
+}).catch(()=>{$('#app').innerHTML='<div class="empty">No se pudo cargar el contenido. Recarga la página.</div>'});
+})();
+</script>
+</body>
+</html>

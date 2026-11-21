@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Palabra con Poder — la app gratis de Salmos y oraciones</title>
+<meta name="description" content="El salmo exacto para lo que estás viviendo hoy. Los Salmos explicados versículo por versículo, oraciones para cada momento y un plan de 15 minutos al día con Dios. Gratis.">
+<meta name="theme-color" content="#1D2A3B">
+<link rel="icon" href="favicon.png">
+<meta property="og:title" content="Palabra con Poder: la app gratis de Salmos y oraciones">
+<meta property="og:description" content="El salmo exacto para lo que estás viviendo hoy. Gratis.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --mist:#EEF1F5; --paper:#FFFFFF; --ink:#1D2A3B; --ink2:#4A5868; --ink3:#6B7787;
+  --lamp:#D9A23B; --lampdeep:#9A6B12; --olive:#56653C; --olivebg:#E6EADB; --line:#D9DFE8;
+  --serif:'Literata',Georgia,serif; --sans:'Figtree',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;overflow-x:hidden;font-family:var(--sans);color:var(--ink);background:var(--mist);-webkit-font-smoothing:antialiased;font-size:18px;line-height:1.55}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--lamp);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+.cta{display:inline-flex;align-items:center;justify-content:center;gap:10px;background:var(--lamp);color:var(--ink);font-weight:700;font-size:18px;text-decoration:none;border-radius:16px;padding:18px 28px;min-height:56px;transition:transform .15s}
+.cta:hover{transform:translateY(-1px)}
+.cta:active{transform:none}
+.cta svg{flex:none}
+.under{font-size:15px;color:var(--ink3);margin:12px 0 0}
+
+/* top */
+.top{display:flex;align-items:center;justify-content:space-between;padding:18px 0}
+.brand{font-weight:700;font-size:17px;display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand i{width:12px;height:12px;border-radius:50%;background:var(--lamp);box-shadow:0 0 0 6px rgba(217,162,59,.2)}
+.top a.small{font-size:15px;font-weight:600;text-decoration:none;padding:10px 14px;border-radius:12px;background:var(--paper)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;padding:32px 0 72px}
+.hero h1{font-family:var(--serif);font-weight:500;font-size:clamp(40px,5.4vw,64px);line-height:1.06;letter-spacing:-.01em;margin:0 0 20px}
+.hero p.lead{font-size:20px;line-height:1.55;color:var(--ink2);margin:0 0 28px;max-width:34ch}
+.facts{display:flex;flex-wrap:wrap;gap:8px 20px;margin:28px 0 0;padding:0;list-style:none;font-size:16px;color:var(--ink2)}
+.facts li{display:flex;align-items:center;gap:8px}
+.facts svg{color:var(--olive)}
+.stagephone{position:relative;display:flex;justify-content:center}
+.stagephone::before{content:"";position:absolute;width:520px;height:520px;border-radius:50%;top:-40px;right:-60px;background:radial-gradient(circle,rgba(217,162,59,.42),rgba(217,162,59,0) 66%);pointer-events:none}
+.device{position:relative;width:360px;height:740px;border-radius:46px;background:#10171F;padding:11px;box-shadow:0 40px 80px rgba(16,23,31,.3)}
+.device iframe{width:100%;height:100%;border:0;border-radius:36px;background:var(--mist);display:block}
+.tryhint{position:absolute;left:-12px;bottom:110px;background:var(--paper);border-radius:14px;padding:10px 14px;font-size:14px;font-weight:600;box-shadow:0 10px 30px rgba(16,23,31,.15);display:flex;gap:8px;align-items:center;max-width:200px;line-height:1.3}
+.tryhint svg{flex:none;color:var(--lampdeep)}
+
+/* sections */
+section.band{padding:88px 0}
+section.band.paper{background:var(--paper)}
+section.band.ink{background:var(--ink);color:#F3F5F8}
+h2{font-family:var(--serif);font-weight:500;font-size:clamp(32px,3.6vw,44px);line-height:1.12;margin:0 0 16px;max-width:22ch}
+.intro{font-size:19px;color:var(--ink2);max-width:58ch;margin:0 0 44px}
+.ink .intro{color:#C9D1DC}
+
+/* situaciones */
+.sits{display:flex;flex-wrap:wrap;gap:10px;margin:0;padding:0;list-style:none}
+.sits li{font-family:var(--serif);font-size:20px;background:var(--mist);border-radius:999px;padding:12px 20px;display:flex;align-items:center;gap:10px}
+.sits li i{width:9px;height:9px;border-radius:50%;background:var(--lamp);flex:none}
+
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;counter-reset:s;list-style:none;margin:0;padding:0}
+.steps li{background:var(--paper);border-radius:22px;padding:28px}
+.steps li::before{counter-increment:s;content:counter(s);display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--ink);color:#fff;font-weight:700;font-size:17px;margin-bottom:18px}
+.steps b{display:block;font-size:20px;margin-bottom:6px}
+.steps p{margin:0;color:var(--ink2);font-size:17px}
+
+/* muestra */
+.sample{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:start}
+.reading{background:var(--paper);color:var(--ink);border-radius:26px;padding:34px 32px}
+.reading .k{font-size:15px;font-weight:600;color:var(--ink3)}
+.reading h3{font-family:var(--serif);font-weight:500;font-size:28px;line-height:1.2;margin:4px 0 22px}
+.reading .v{font-family:var(--serif);font-size:22px;line-height:1.6;margin:0}
+.reading .v sup{font-family:var(--sans);font-size:13px;font-weight:700;color:var(--lampdeep);margin-right:4px}
+.reading .lbl{display:block;font-size:14px;font-weight:700;color:var(--ink2);margin:18px 0 2px}
+.reading .life{border-left:3px solid var(--olive);padding-left:14px;margin-top:16px}
+.reading .life .lbl{margin-top:0}
+.reading p{margin:0}
+.sample ul{list-style:none;margin:0;padding:0}
+.sample li{display:flex;gap:14px;padding:18px 0;border-top:1px solid rgba(255,255,255,.14);font-size:18px;line-height:1.45}
+.sample li:first-child{border-top:0;padding-top:0}
+.sample li svg{flex:none;color:var(--lamp);margin-top:3px}
+.sample li b{display:block;color:#fff;font-size:19px;margin-bottom:2px}
+.sample li span{color:#C9D1DC}
+
+/* gratis */
+.free{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}
+.freebox{background:var(--paper);border-radius:26px;padding:32px}
+.freebox h3{font-family:var(--serif);font-weight:500;font-size:26px;margin:0 0 14px}
+.ticks{list-style:none;margin:0;padding:0}
+.ticks li{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line);font-size:18px;line-height:1.4}
+.ticks li:first-child{border-top:0}
+.ticks svg{flex:none;color:var(--olive);margin-top:2px}
+.note{font-size:16px;color:var(--ink2);margin:16px 0 0}
+
+/* faq */
+.faq{max-width:760px}
+.faq details{border-top:1px solid var(--line);padding:4px 0}
+.faq details:last-child{border-bottom:1px solid var(--line)}
+.faq summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 0;font-weight:600;font-size:19px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary svg{flex:none;transition:transform .2s;color:var(--ink3)}
+.faq details[open] summary svg{transform:rotate(45deg)}
+.faq details p{margin:0 0 20px;color:var(--ink2);font-size:17px;max-width:62ch}
+
+/* final */
+.final{text-align:center}
+.final h2{margin:0 auto 14px}
+.final blockquote{font-family:var(--serif);font-size:clamp(24px,2.6vw,30px);line-height:1.45;max-width:30ch;margin:0 auto 10px}
+.final .ref{color:var(--lamp);font-weight:600;font-size:16px;margin:0 0 36px}
+footer{padding:36px 0 110px;font-size:15px;color:var(--ink3)}
+footer .wrap{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+
+/* barra fija en celular */
+.sticky{display:none}
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;gap:44px;padding:12px 0 56px;text-align:left}
+  .stagephone::before{width:380px;height:380px;right:auto;top:-30px}
+  .device{width:300px;height:620px;border-radius:40px;padding:9px}
+  .device iframe{border-radius:32px}
+  .tryhint{left:0;bottom:-18px}
+  section.band{padding:64px 0}
+  .steps{grid-template-columns:1fr}
+  .sample,.free{grid-template-columns:1fr;gap:32px}
+  .top a.small{display:none}
+  .sticky{display:block;position:fixed;left:0;right:0;bottom:0;padding:12px 16px 16px;background:rgba(238,241,245,.96);border-top:1px solid var(--line);z-index:20;transform:translateY(110%);transition:transform .25s}
+  .sticky.on{transform:none}
+  .sticky .cta{width:100%}
+}
+@media (max-width:420px){.wrap{padding:0 18px}.reading{padding:26px 22px}.cta{width:100%}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#inicio"><i></i>Palabra con Poder</a>
+    <a class="small" href="app/">Abrir la app</a>
+  </header>
+
+  <main id="inicio">
+  <section class="hero">
+    <div>
+      <h1>El salmo exacto para lo que estás viviendo hoy</h1>
+      <p class="lead">Una app gratis con los Salmos explicados versículo por versículo, oraciones para cada momento y 15 minutos al día con Dios.</p>
+      <a class="cta" href="app/" data-cta>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg>
+        Descargar la app gratis
+      </a>
+      <p class="under">Sin tarjeta y sin registrarte. Se instala desde tu navegador.</p>
+      <ul class="facts">
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>Android y iPhone</li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>Letra grande y audio</li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>Biblia Reina-Valera</li>
+      </ul>
+    </div>
+    <div class="stagephone">
+      <div class="device">
+        <iframe src="app/#demo" title="Demostración de la app Palabra con Poder" loading="eager"></iframe>
+      </div>
+      <div class="tryhint"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11V5a2 2 0 014 0v6M13 10a2 2 0 014 0v3M17 12a2 2 0 014 0v3a6 6 0 01-6 6h-2a6 6 0 01-5-2.7L5 14.6a2 2 0 013.2-2.4L9 13"/></svg>Pruébala aquí: toca la pantalla</div>
+    </div>
+  </section>
+  </main>
+</div>
+
+<section class="band paper">
+  <div class="wrap">
+    <h2>Abres la app, eliges lo que sientes, y la Palabra te responde</h2>
+    <p class="intro">No tienes que saber dónde buscar. La app te lleva a los salmos y oraciones que hablan de tu momento.</p>
+    <ul class="sits">
+      <li><i></i>Siento ansiedad o miedo</li>
+      <li><i></i>Necesito paz</li>
+      <li><i></i>Oro por mi familia</li>
+      <li><i></i>Oro por mis hijos</li>
+      <li><i></i>Mi matrimonio</li>
+      <li><i></i>Trabajo y provisión</li>
+      <li><i></i>Tengo que tomar una decisión</li>
+      <li><i></i>Mi fe está débil</li>
+      <li><i></i>Necesito perdón</li>
+      <li><i></i>Quiero empezar el día con Dios</li>
+    </ul>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <h2>Tu tiempo con Dios, en tres pasos</h2>
+    <p class="intro">Pensada para quien quiere leer la Biblia todos los días y no siempre tiene tiempo o no sabe por dónde empezar.</p>
+    <ol class="steps">
+      <li><b>Elige tu momento</b><p>Toca lo que estás viviendo hoy o abre el versículo del día.</p></li>
+      <li><b>Lee y entiende</b><p>Cada versículo viene con una explicación sencilla y lo que significa para tu vida.</p></li>
+      <li><b>Ora y escucha</b><p>Termina con una oración. Si prefieres, la app te la lee en voz alta.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="band ink">
+  <div class="wrap">
+    <h2>Así se ve una lectura en la app</h2>
+    <p class="intro">Explicaciones claras, sin palabras difíciles, escritas para aplicar la Palabra en tu día.</p>
+    <div class="sample">
+      <article class="reading" aria-label="Ejemplo: Salmo 91">
+        <div class="k">Salmo 91</div>
+        <h3>La protección de Dios para los que confían en Él</h3>
+        <p class="v"><sup>1</sup>El que habita al abrigo del Altísimo, morará bajo la sombra del Omnipotente. <sup>2</sup>Diré yo a Jehová: Esperanza mía, y castillo mío; mi Dios, en él confiaré.</p>
+        <span class="lbl">Explicación</span>
+        <p>Los que permanecen en la presencia de Dios están protegidos por su poder y fidelidad.</p>
+        <div class="life"><span class="lbl">Para tu vida</span><p>Si buscamos a Dios constantemente, encontraremos paz y seguridad en Él.</p></div>
+      </article>
+      <ul>
+        <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2z"/><path d="M4 21V5M8 7h7"/></svg><div><b>Los Salmos versículo por versículo</b><span>Quién lo escribió, qué estaba viviendo y qué te dice hoy.</span></div></li>
+        <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v8M9 21l-4-4V9a2 2 0 014 0v4M15 21l4-4V9a2 2 0 00-4 0v4M9 13l3-1 3 1"/></svg><div><b>Oraciones para cada momento</b><span>Para la mañana, la familia, los hijos, el matrimonio, el trabajo y los días difíciles.</span></div></li>
+        <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h6a4 4 0 000-8h-4a4 4 0 010-8h6"/></svg><div><b>Conexión Vital: 15 minutos al día</b><span>Una Palabra, una reflexión, una oración y un desafío práctico para cada día.</span></div></li>
+        <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 002 2h10a2 2 0 002-2v-6"/></svg><div><b>Versículo del día para compartir</b><span>Una imagen lista para enviar por WhatsApp a quien la necesite.</span></div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap free">
+    <div>
+      <h2>Lo que recibes gratis</h2>
+      <p class="intro" style="margin-bottom:28px">Descargas, abres y empiezas. No pedimos tarjeta ni correo para usarla.</p>
+      <a class="cta" href="app/" data-cta>Descargar la app gratis</a>
+    </div>
+    <div class="freebox">
+      <h3>Gratis para siempre</h3>
+      <ul class="ticks">
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>7 salmos completos explicados: 1, 23, 27, 46, 51, 91 y 121</li>
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>Una oración completa para cada situación</li>
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>Los primeros 3 días del plan Conexión Vital</li>
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>Un versículo nuevo cada día</li>
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>Audio y letra grande</li>
+      </ul>
+      <p class="note">Si quieres más, dentro de la app puedes abrir los 150 Salmos, todas las oraciones y los 30 días del plan.</p>
+    </div>
+  </div>
+</section>
+
+<section class="band paper">
+  <div class="wrap">
+    <h2>Preguntas frecuentes</h2>
+    <div class="faq">
+      <details><summary>¿De verdad es gratis?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><p>Sí. La versión gratuita no vence y no pide tarjeta. Si un día quieres el contenido completo, puedes desbloquearlo dentro de la app con un pago único.</p></details>
+      <details><summary>¿Tengo que buscarla en la tienda de apps?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><p>No. Tocas el botón, se abre en tu navegador y la agregas a la pantalla de inicio de tu celular. Ocupa muy poco espacio y queda como cualquier otra app.</p></details>
+      <details><summary>¿Qué Biblia usa?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><p>El texto de los Salmos es de la Reina-Valera 1909, la versión clásica que muchas iglesias de habla hispana leyeron por generaciones.</p></details>
+      <details><summary>¿Necesito saber mucho de la Biblia?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><p>No. Cada versículo viene explicado con palabras sencillas y con una aplicación para tu vida. Sirve tanto si estás empezando como si ya lees la Biblia hace años.</p></details>
+      <details><summary>¿Funciona sin internet?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><p>Sí. Una vez instalada, puedes leer aunque no tengas señal.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="band ink final">
+  <div class="wrap">
+    <blockquote>Alzaré mis ojos a los montes, de donde vendrá mi socorro.</blockquote>
+    <p class="ref">Salmo 121:1</p>
+    <h2>Empieza hoy tu tiempo con Dios</h2>
+    <p class="intro" style="margin:0 auto 32px">Toma un minuto. Abre la app y elige lo que estás viviendo.</p>
+    <a class="cta" href="app/" data-cta>Descargar la app gratis</a>
+    <p class="under" style="color:#C9D1DC">Sin tarjeta y sin registrarte.</p>
+  </div>
+</section>
+
+<footer><div class="wrap"><span>Palabra con Poder · @palabraconpoderr</span><span>Texto bíblico: Reina-Valera 1909, dominio público.</span></div></footer>
+
+<div class="sticky" id="sticky"><a class="cta" href="app/" data-cta>Descargar la app gratis</a></div>
+
+<script>
+(()=>{
+  const st=document.getElementById('sticky'),hero=document.querySelector('.hero .cta');
+  if('IntersectionObserver' in window&&hero){new IntersectionObserver(([e])=>st.classList.toggle('on',!e.isIntersecting)).observe(hero)}
+})();
+</script>
+</body>
+</html>
