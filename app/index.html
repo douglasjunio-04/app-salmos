@@ -370,7 +370,7 @@ function vHome(){
   if(S.favs.length){
     h+=`<div class="sect"><h3>Tus favoritos</h3><div class="list">${S.favs.slice(-4).reverse().map(favItem).join('')}</div></div>`;
   }
-  if(!paid()){
+  if(!paid()&&!DEMO){
     h+=`<div class="unlock"><b>Estás usando la versión gratuita</b><p>Tienes 7 salmos completos, una oración por cada situación y los primeros 3 días del plan. Con el plan completo abres los 150 Salmos, 188 oraciones y los 30 días.</p><button class="btn" data-act="paywall">Ver el plan completo</button></div>`;
   } else {
     const ks=['biblioteca','finanzas','ninos'].filter(k=>!(BAN[k].upsell&&hasUpsell())&&!S.hidden[k+'h']);
