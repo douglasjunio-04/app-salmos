@@ -48,6 +48,11 @@
       "source": "/bio",
       "destination": "/?utm_source=instagram&utm_medium=bio&utm_campaign=palabraconpoderr",
       "permanent": false
+    },
+    {
+      "source": "/bio/",
+      "destination": "/?utm_source=instagram&utm_medium=bio&utm_campaign=palabraconpoderr",
+      "permanent": false
     }
   ]
 }
