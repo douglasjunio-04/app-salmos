@@ -210,6 +210,19 @@ button{font:inherit;color:inherit;cursor:pointer}
 @media (min-width:600px){.embed body{background:#DCE2EA}}
 </style>
 <script>if(location.hash!=='#preview')document.documentElement.classList.add('embed')</script>
+<!-- Rastreamento: Pixel da Meta + UTMify (pixel e script de UTMs). Não carrega na demonstração nem na prévia. -->
+<script>
+(function(){
+  var h=location.hash;if(h==='#demo'||h==='#preview')return;
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init','1074357151926869');fbq('track','PageView');
+  window.pixelId='6b011a9bd20b03d5a3edd6ab';
+  function add(src,attrs){var s=document.createElement('script');s.src=src;s.async=true;s.defer=true;(attrs||[]).forEach(function(a){s.setAttribute(a,'')});(document.head||document.documentElement).appendChild(s)}
+  add('https://cdn.utmify.com.br/scripts/pixel/pixel.js');
+  add('https://cdn.utmify.com.br/scripts/utms/latest.js',['data-utmify-prevent-subids']);
+})();
+</script>
+<noscript><img height="1" width="1" style="display:none" alt="" src="https://www.facebook.com/tr?id=1074357151926869&ev=PageView&noscript=1"></noscript>
 </head>
 <body>
 <button class="panel-toggle" id="ptoggle" aria-expanded="false">Prévia</button>
@@ -570,6 +583,7 @@ function pendingSheet(){
   <p class="fine">Revisa también tu carpeta de spam o promociones.</p>`);
 }
 function paywall(){
+  track('ViewContent',{content_name:'Plan Completo',content_ids:['plan'],value:CONFIG.price.plan,currency:'USD'});
   if(pending()){pendingSheet();return}
   sheet(`<h2>Abre todos los Salmos y oraciones</h2><p class="sub">Todo lo que necesitas para orar y entender la Palabra, en tu celular.</p>
   <ul class="ticks">${['Los 150 Salmos explicados versículo por versículo','188 oraciones para cada momento de tu vida','Los 30 días del plan Conexión Vital','Escucha cada salmo y oración en voz alta','Funciona sin internet una vez instalado'].map(t=>`<li>${I.tick}<span>${t}</span></li>`).join('')}</ul>
@@ -666,10 +680,10 @@ document.addEventListener('click',e=>{
    case'paywall':paywall();break;
    case'activate':closeSheet();activateSheet();break;
    case'sync':loadFull();break;
-   case'buy':if(PREVIEW||DEMO){closeSheet();setMode('paid');setTimeout(upsell,250)}else openUrl(CONFIG.checkout,'El pago estará disponible muy pronto');break;
-   case'upsell-yes':if(PREVIEW||DEMO){closeSheet();setMode('all');toast('Biblioteca agregada a tu plan')}else openUrl(CONFIG.upsell,'Esta oferta estará disponible muy pronto');break;
+   case'buy':if(PREVIEW||DEMO){closeSheet();setMode('paid');setTimeout(upsell,250)}else openUrl(CONFIG.checkout,'El pago estará disponible muy pronto',{content_name:'Plan Completo',content_ids:['plan'],value:CONFIG.price.plan,currency:'USD'});break;
+   case'upsell-yes':if(PREVIEW||DEMO){closeSheet();setMode('all');toast('Biblioteca agregada a tu plan')}else openUrl(CONFIG.upsell,'Esta oferta estará disponible muy pronto',{content_name:'Biblioteca de Estudio Bíblico',content_ids:['biblioteca'],value:CONFIG.price.upsell,currency:'USD'});break;
    case'upsell-no':closeSheet();setTimeout(downsell,250);break;
-   case'downsell-yes':if(PREVIEW||DEMO){closeSheet();setMode('all');toast('Biblioteca agregada a tu plan')}else openUrl(CONFIG.downsell,'Esta oferta estará disponible muy pronto');break;
+   case'downsell-yes':if(PREVIEW||DEMO){closeSheet();setMode('all');toast('Biblioteca agregada a tu plan')}else openUrl(CONFIG.downsell,'Esta oferta estará disponible muy pronto',{content_name:'Biblioteca de Estudio Bíblico (oferta)',content_ids:['biblioteca-oferta'],value:CONFIG.price.downsell,currency:'USD'});break;
    case'downsell-no':closeSheet();break;
    case'bib-offer':bibOffer();break;
    case'book':go(['book',ds.b]);break;
@@ -765,7 +779,10 @@ function activateSheet(msg){
   });
   setTimeout(()=>$('#actemail')?.focus(),50);
 }
-function openUrl(u,fallback){if(!u)return toast(fallback);if(S.email&&u.includes('pay.hotmart.com'))u+=(u.includes('?')?'&':'?')+'email='+encodeURIComponent(S.email);location.href=u}
+function track(ev,p){try{if(!DEMO&&!PREVIEW&&window.fbq)fbq('track',ev,p||{})}catch(e){}}
+function openUrl(u,fallback,ev){if(!u)return toast(fallback);if(S.email&&u.includes('pay.hotmart.com'))u+=(u.includes('?')?'&':'?')+'email='+encodeURIComponent(S.email);if(ev)track('InitiateCheckout',ev);
+  // window.open passa pelo script da UTMify, que acrescenta as UTMs do anúncio ao link do checkout
+  setTimeout(()=>{const w=window.open(u,'_self');if(!w)location.href=u},ev?300:0)}
 // Ao voltar do checkout, confere de novo a compra (libera a Biblioteca sem recarregar).
 let lastSync=Date.now();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&S.email&&!PREVIEW&&!DEMO&&Date.now()-lastSync>20000){lastSync=Date.now();syncAccess(S.email)}});
 document.querySelectorAll('#modes button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.scrim').forEach(s=>s.remove());setMode(b.dataset.mode);$('#panel').classList.remove('open')}));
@@ -777,6 +794,8 @@ Promise.all(['psalms','prayers','plan30'].map(f=>fetch('data/'+f+'.json').then(r
   const cnt={};pr.items.forEach(p=>{if(!firstOfCat[p.cat])firstOfCat[p.cat]=p.id;cnt[p.cat]=(cnt[p.cat]||0);rankInCat[p.id]=cnt[p.cat]++});
   render(true);
   if(ASK_EMAIL&&!DEMO)setTimeout(()=>activateSheet(),300);
+  // Lead: primeira vez que a pessoa abre o app neste aparelho
+  try{if(!DEMO&&!PREVIEW&&!localStorage.getItem('pcp_lead')){track('Lead',{content_name:'App Palabra con Poder'});localStorage.setItem('pcp_lead','1')}}catch(e){}
   if(!DEMO&&S.email)syncAccess();
   else if(!DEMO&&!PREVIEW&&(S.mode==='paid'||S.mode==='all')){setMode('free')}
 }).catch(()=>{$('#app').innerHTML='<div class="empty">No se pudo cargar el contenido. Recarga la página.</div>'});
