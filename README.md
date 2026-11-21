@@ -36,3 +36,13 @@ Texto bíblico: Reina-Valera 1909 (domínio público).
 ## Pagamento pendente (boleto, OXXO, PIX)
 
 `https://app-salmos.vercel.app/app/#pendiente-221a4216` libera 21 salmos completos, 3 orações por situação e 7 dias do plano, com aviso de pedido reservado e opção de pagar com cartão. Nunca rebaixa quem já tem acesso completo.
+
+## Acesso por e-mail e webhook Hotmart
+
+- `api/hotmart.js` — webhook Hotmart 2.0 (`/api/hotmart`). Valida o `X-HOTMART-HOTTOK`, grava o status de cada comprador (aprovado, pendente, reembolso, chargeback, cancelado) no Upstash Redis.
+- `api/acceso.js` — o app consulta o status pelo e-mail da compra.
+- `api/contenido.js` — entrega o conteúdo completo (criptografado em `conteudo/*.enc`) só para e-mails com compra ativa.
+- O app em `app/data/` contém só a parte grátis. Link de entrega: `/app/#activar`.
+
+Variáveis na Vercel: `CONTENT_KEY`, `HOTMART_HOTTOK`, `KV_REST_API_URL` + `KV_REST_API_TOKEN` (Upstash), opcional `HOTMART_PRODUCT_BIB` e `ADMIN_EMAILS`.
+Para regenerar o conteúdo: `CONTENT_KEY=<hex> python3 tools/split_content.py <pasta_com_json_completos>`.

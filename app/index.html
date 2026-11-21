@@ -238,7 +238,8 @@ button{font:inherit;color:inherit;cursor:pointer}
       <li>Login e liberação via Hotmart</li>
       <li>Planos de 21 dias, Hogar Blindado e 52 semanas: entram na próxima rodada de revisão</li>
     </ul>
-    <p style="margin-top:16px"><button class="linkbtn" id="reset">Zerar progresso e favoritos</button></p>
+    <p style="margin-top:16px"><button class="linkbtn" data-act="activate">Entrar com meu e-mail para ver o conteúdo completo na prévia</button></p>
+    <p style="margin-top:8px"><button class="linkbtn" id="reset">Zerar progresso e favoritos</button></p>
   </aside>
   <div class="phone"><div class="app" id="app"></div></div>
 </div>
@@ -293,17 +294,19 @@ const CONFIG={
   downsell:'',          // link do checkout da Biblioteca com desconto (downsell, US$ 10,90)
   links:{biblioteca:'',finanzas:'',ninos:''}, // páginas de venda dos banners
   // Página de obrigado da Hotmart deve abrir: https://SEU-DOMINIO/app/#acceso-3f385a2a
-  activar:{'acceso-3f385a2a':'paid','biblioteca-1e145dbf':'all','pendiente-221a4216':'pending'}
+  activar:{'pendiente-221a4216':'pending'}
 };
 /* ====================================== */
 const PREVIEW=location.hash==='#preview';
 const DEMO=location.hash==='#demo';
 function checkActivation(){const k=location.hash.slice(1);const m=CONFIG.activar[k];if(!m)return null;try{const cur=localStorage.getItem('pcp_mode');const v=(m==='paid'&&cur==='"all"')?'all':(m==='pending'&&(cur==='"paid"'||cur==='"all"'))?JSON.parse(cur):m;localStorage.setItem('pcp_mode',JSON.stringify(v))}catch(e){}history.replaceState(null,'',location.pathname);return m}
 window.__activated=checkActivation();
+const ASK_EMAIL=['#activar','#acceso-3f385a2a','#biblioteca-1e145dbf'].includes(location.hash);
+if(ASK_EMAIL)history.replaceState(null,'',location.pathname);
 window.addEventListener('hashchange',()=>{if(checkActivation())location.reload()});
 let D={}, S={
   mode:DEMO?'free':store.get('mode','free'), tab:'hoy', stack:[], done:store.get('done',[]),
-  favs:store.get('favs',[]), notes:store.get('notes',{}), fs:store.get('fs',18), hidden:{}, seenUpsell:false
+  favs:store.get('favs',[]), notes:store.get('notes',{}), email:store.get('email',''), lastOk:store.get('lastOk',0), fs:store.get('fs',18), hidden:{}, seenUpsell:false
 };
 const paid=()=>S.mode==='paid'||S.mode==='all', hasUpsell=()=>S.mode==='all', pending=()=>S.mode==='pending';
 const psFree=n=>paid()||FREE_PS.includes(n)||(pending()&&PEND_PS.includes(n));
@@ -375,7 +378,7 @@ function vHome(){
     h+=`<div class="sect"><h3>Tus favoritos</h3><div class="list">${S.favs.slice(-4).reverse().map(favItem).join('')}</div></div>`;
   }
   if(!paid()&&!pending()&&!DEMO){
-    h+=`<div class="unlock"><b>Estás usando la versión gratuita</b><p>Tienes 7 salmos completos, una oración por cada situación y los primeros 3 días del plan. Con el plan completo abres los 150 Salmos, 188 oraciones y los 30 días.</p><button class="btn" data-act="paywall">Ver el plan completo</button></div>`;
+    h+=`<div class="unlock"><b>Estás usando la versión gratuita</b><p>Tienes 7 salmos completos, una oración por cada situación y los primeros 3 días del plan. Con el plan completo abres los 150 Salmos, 188 oraciones y los 30 días.</p><button class="btn" data-act="paywall">Ver el plan completo</button><button class="btn ghost" data-act="activate" style="margin-top:6px">¿Ya compraste? Activa tu acceso</button></div>`;
   } else {
     const ks=['biblioteca','finanzas','ninos'].filter(k=>!(BAN[k].upsell&&hasUpsell())&&!S.hidden[k+'h']);
     if(ks.length)h+=`<div class="adtag">Recomendado para ti</div><div class="banners">${ks.map(k=>bannerHTML(k,'h')).join('')}</div>`;
@@ -388,7 +391,7 @@ function favItem(k){
   const p=D.prayers.items.find(x=>x.id===id); if(!p)return '';
   return `<button class="item" data-act="prayer" data-id="${p.id}"><div class="t"><b>${esc(p.title)}</b><small>${esc(D.prayers.cats[p.cat])}</small></div></button>`;
 }
-function psRow(n){const p=P(n);return `<button class="item" data-act="psalm" data-n="${n}"><div class="num">${n}</div><div class="t"><b>${esc(p.title)}</b><small>${p.blocks.length} enseñanzas</small></div>${psFree(n)?(paid()?'':'<span class="free">Gratis</span>'):`<span class="lock">${I.lock}</span>`}</button>`}
+function psRow(n){const p=P(n);return `<button class="item" data-act="psalm" data-n="${n}"><div class="num">${n}</div><div class="t"><b>${esc(p.title)}</b><small>${p.nblocks||p.blocks.length} enseñanzas</small></div>${psFree(n)?(paid()?'':'<span class="free">Gratis</span>'):`<span class="lock">${I.lock}</span>`}</button>`}
 function prRow(p){return `<button class="item" data-act="prayer" data-id="${p.id}"><div class="t"><b>${esc(p.title.replace(/^Oración (para|por|de) /,'').replace(/^./,c=>c.toUpperCase()))}</b><small>${esc(D.prayers.cats[p.cat])}</small></div>${prFree(p)?(paid()?'':'<span class="free">Gratis</span>'):`<span class="lock">${I.lock}</span>`}</button>`}
 function vMood(id){
   const m=MOODS.find(x=>x.id===id);
@@ -415,6 +418,7 @@ function vPsalm(n){
    <div class="note"><span class="lbl">Explicación</span>${esc(b.exp)}</div><div class="note life"><span class="lbl">Para tu vida</span>${esc(b.app)}</div></div>`;
   let h=top('Salmo '+n,`<button class="iconbtn" aria-pressed="${fav}" aria-label="Favorito" data-act="fav" data-k="ps:${n}">${fav?I.heartf:I.heart}</button>`)+
   `<article class="reader"><h1>${esc(p.title)}</h1><p class="intro">${esc(p.intro)}</p>`;
+  if(open&&p.locked){h+=needFull()+`</article>`;return h}
   if(open){
     h+=`<div class="tools"><button class="tool" aria-pressed="${speaking==='ps'+n}" data-act="listen" data-k="ps${n}">${speaking==='ps'+n?I.stop+' Detener':I.play+' Escuchar'}</button><button class="tool" data-act="fs" data-d="-1" aria-label="Letra más pequeña">A−</button><button class="tool" data-act="fs" data-d="1" aria-label="Letra más grande">A+</button></div>`;
     if(p.superscription)h+=`<p class="supers">${esc(p.superscription)}</p>`;
@@ -425,7 +429,7 @@ function vPsalm(n){
     S._listen={['ps'+n]:allText};
   } else {
     h+=`<div class="fade">${p.blocks.slice(0,2).map(blk).join('')}</div>
-    <div class="gate"><h4>Sigue leyendo el Salmo ${n}</h4><p>Faltan ${p.blocks.length-1} enseñanzas de este salmo. Con el plan completo abres los 150 Salmos explicados, con audio.</p><button class="btn" data-act="paywall">Desbloquear todo</button></div></article>`;
+    <div class="gate"><h4>Sigue leyendo el Salmo ${n}</h4><p>Faltan ${(p.nblocks||p.blocks.length)-1} enseñanzas de este salmo. Con el plan completo abres los 150 Salmos explicados, con audio.</p><button class="btn" data-act="paywall">Desbloquear todo</button></div></article>`;
   }
   return h;
 }
@@ -444,6 +448,7 @@ function vPrayer(id){
   const paras=p.text.split(/\n\n+/);
   let h=top(D.prayers.cats[p.cat],`<button class="iconbtn" aria-pressed="${fav}" aria-label="Favorito" data-act="fav" data-k="pr:${id}">${fav?I.heartf:I.heart}</button>`)+
   `<article class="reader"><h1>${esc(p.title)}</h1>${p.intro?`<p class="intro">${esc(p.intro)}</p>`:''}`;
+  if(open&&p.locked){h+=`<div class="prayertext" style="margin-top:18px"><p>${esc(paras[0])}</p></div>`+needFull()+`</article>`;return h}
   if(open){
     h+=`<div class="tools"><button class="tool" aria-pressed="${speaking==='pr'+id}" data-act="listen" data-k="pr${id}">${speaking==='pr'+id?I.stop+' Detener':I.play+' Escuchar'}</button><button class="tool" data-act="fs" data-d="-1" aria-label="Letra más pequeña">A−</button><button class="tool" data-act="fs" data-d="1" aria-label="Letra más grande">A+</button></div>
     <div class="prayertext" style="margin-top:18px">${paras.map(x=>`<p>${esc(x)}</p>`).join('')}</div>${p.tip?`<div class="tip">${esc(p.tip)}</div>`:''}</article>`+ctxBanner(p.cat);
@@ -467,6 +472,7 @@ function vPlans(){
 }
 function vDay(n){
   const d=D.plan[n-1];
+  if(dayFree(n)&&d.locked)return top('Día '+n)+`<div class="reader"><h1>${esc(d.title)}</h1>${needFull()}</div>`;
   if(!dayFree(n))return top('Día '+n)+`<div class="reader"><h1>${esc(d.title)}</h1><div class="vcard" style="background:var(--ink);color:#F3F5F8;border-radius:20px;padding:22px"><p style="font-family:var(--serif);font-size:20px;line-height:1.5;margin:0 0 10px">${esc(d.verse.t)}</p><span style="color:var(--lamp);font-weight:600;font-size:14px">${esc(d.verse.ref)}</span></div>
    <div class="gate" style="margin-top:16px"><h4>Tu día ${n} te espera</h4><p>${S.done.length>=3?'Ya completaste 3 días. No pierdas el ritmo: ':''}Desbloquea los 30 días de Conexión Vital y todo el contenido del app.</p><button class="btn" data-act="paywall">Desbloquear todo</button></div></div>`;
   const ok=S.done.includes(n);
@@ -486,7 +492,7 @@ const BOOKS=[['mateo','Mateo','28 capítulos'],['marcos','Marcos','16 capítulos
 const BIB={};
 function bibData(name){
   if(BIB[name])return BIB[name];
-  if(BIB[name]===undefined){BIB[name]=null;fetch('data/bib/'+name+'.json').then(r=>r.json()).then(j=>{BIB[name]=j;render()}).catch(()=>{BIB[name]=undefined;toast('No se pudo cargar. Revisa tu conexión.')})}
+  if(BIB[name]===undefined){BIB[name]=null;(bibOpen()&&S.email?apiContent('bib-'+name):fetch('data/bib/'+name+'.json').then(r=>r.json())).then(j=>{BIB[name]=j;render()}).catch(()=>{BIB[name]=undefined;toast('No se pudo cargar. Revisa tu conexión.')})}
   return null;
 }
 const bibOpen=()=>hasUpsell();
@@ -514,6 +520,7 @@ function vChap(k){
   if(!d)return top(name+' '+c)+loading;
   const ch=d.find(x=>x.c===+c);
   let h=top(name+' '+c)+`<article class="reader"><div class="kicker">Evangelio de ${name}</div><h1>Capítulo ${c}</h1>${ch.intro?`<p class="intro">${esc(ch.intro)}</p>`:''}`;
+  if(bibOpen()&&ch.locked){h+=needFull()+'</article>';return h}
   if(bibOpen()){
     S._listen={['bib'+k]:name+' capítulo '+c+'. '+ch.blocks.map(x=>x.text.map(t=>t.t).join(' ')+'. '+x.exp).join(' ')};
     h+=readerTools('bib'+k)+ch.blocks.map(x=>bblk(x,'Explicación','Para tu vida')).join('');
@@ -532,6 +539,7 @@ function vProvChap(c){
   const ch=d.find(x=>x.c===c), x=ch.ctx;
   let h=top('Proverbios '+c)+`<article class="reader"><div class="kicker">Proverbios</div><h1>Capítulo ${c}</h1>
    <div class="tip" style="margin-bottom:6px">${x.autor?`<p style="margin:0 0 8px"><b>Autor:</b> ${esc(x.autor)}</p>`:''}${x.fecha?`<p style="margin:0 0 8px"><b>Fecha:</b> ${esc(x.fecha)}</p>`:''}${x.contexto?`<p style="margin:0 0 8px"><b>Contexto:</b> ${esc(x.contexto)}</p>`:''}${x.concepto?`<p style="margin:0"><b>Idea central:</b> ${esc(x.concepto)}</p>`:''}</div>`;
+  if(bibOpen()&&ch.locked){h+=needFull()+'</article>';return h}
   if(bibOpen()){
     S._listen={['prov'+c]:'Proverbios capítulo '+c+'. '+ch.blocks.map(b=>b.text.map(t=>t.t).join(' ')+'. '+b.exp).join(' ')};
     h+=readerTools('prov'+c)+ch.blocks.map(b=>bblk(b,'Explicación','')).join('');
@@ -567,7 +575,8 @@ function paywall(){
   <ul class="ticks">${['Los 150 Salmos explicados versículo por versículo','188 oraciones para cada momento de tu vida','Los 30 días del plan Conexión Vital','Escucha cada salmo y oración en voz alta','Funciona sin internet una vez instalado'].map(t=>`<li>${I.tick}<span>${t}</span></li>`).join('')}</ul>
   <div class="price"><b>${money(CONFIG.price.plan)}</b><s>${money(CONFIG.price.planFrom)}</s><span>Pago único</span></div>${fxNote(CONFIG.price.plan)}
   <button class="btn lamp" data-act="buy">Desbloquear por ${money(CONFIG.price.plan)}</button>
-  <p class="fine">Acceso para siempre. Garantía de 7 días: si no te gusta, te devolvemos tu dinero.</p>`);
+  <p class="fine">Acceso para siempre. Garantía de 7 días: si no te gusta, te devolvemos tu dinero.</p>
+  <button class="btn ghost" data-act="activate" style="margin-top:4px">¿Ya compraste? Activa tu acceso</button>`);
 }
 const BIB_TICKS=['Mateo, Marcos, Lucas y Juan explicados versículo por versículo','Los 31 capítulos de Proverbios explicados','194 versículos clave de toda la Biblia con su explicación'];
 function bibOffer(){
@@ -655,6 +664,8 @@ document.addEventListener('click',e=>{
      if(!paid()&&n===3){render();setTimeout(paywall,500)}else{S.stack.pop();go(['day',nextDay()])}break}
    case'undo':S.done=S.done.filter(x=>x!==+ds.d);store.set('done',S.done);render();break;
    case'paywall':paywall();break;
+   case'activate':closeSheet();activateSheet();break;
+   case'sync':loadFull();break;
    case'buy':if(PREVIEW||DEMO){closeSheet();setMode('paid');setTimeout(upsell,250)}else openUrl(CONFIG.checkout,'El pago estará disponible muy pronto');break;
    case'upsell-yes':if(PREVIEW||DEMO){closeSheet();setMode('all');toast('Biblioteca agregada a tu plan')}else openUrl(CONFIG.upsell,'Esta oferta estará disponible muy pronto');break;
    case'upsell-no':closeSheet();setTimeout(downsell,250);break;
@@ -685,6 +696,74 @@ function money(usd){
   catch(e){return 'US$ '+usd.toFixed(2)}
 }
 function fxNote(usd){return FX.currency==='USD'?'':`<p class="fine" style="margin:-4px 0 12px">Precio aproximado en tu moneda (US$ ${usd.toFixed(2).replace('.',',')}). El valor exacto aparece en la página de pago.</p>`}
+/* ---------- cuenta: acceso por correo ---------- */
+const DAY=864e5;
+function needFull(){return `<div class="gate"><h4>Descargando tu contenido</h4><p>${navigator.onLine===false?'Conéctate a internet una vez para descargar tu contenido completo.':'Estamos cargando tu contenido completo. Si no aparece en unos segundos, revisa tu conexión.'}</p><button class="btn" data-act="sync">Intentar de nuevo</button></div>`}
+async function apiContent(f){
+  const r=await fetch('/api/contenido?f='+encodeURIComponent(f),{headers:{'x-email':S.email}});
+  if(!r.ok)throw new Error(r.status);
+  return r.json();
+}
+async function loadFull(){
+  if(!S.email)return;
+  try{
+    const [ps,pr,pl]=await Promise.all(['psalms','prayers','plan30'].map(apiContent));
+    D.psalms=ps;D.prayers=pr;D.plan=pl;
+    Object.keys(BIB).forEach(k=>delete BIB[k]);
+    render();
+  }catch(e){}
+}
+function purgeCache(){
+  try{caches.keys().then(ks=>ks.forEach(k=>caches.open(k).then(c=>c.keys().then(rs=>rs.forEach(r=>{if(r.url.includes('/api/'))c.delete(r)})))))}catch(e){}
+}
+async function reloadPublic(){
+  const [ps,pr,pl]=await Promise.all(['psalms','prayers','plan30'].map(f=>fetch('data/'+f+'.json',{cache:'no-store'}).then(r=>r.json())));
+  D.psalms=ps;D.prayers=pr;D.plan=pl;Object.keys(BIB).forEach(k=>delete BIB[k]);
+}
+async function syncAccess(email,fromSheet){
+  const e=(email||S.email||'').trim().toLowerCase();
+  if(!e)return null;
+  let j;
+  try{
+    const r=await fetch('/api/acceso',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e})});
+    if(!r.ok)throw new Error(r.status);
+    j=await r.json();
+  }catch(err){
+    // sin conexión: se mantiene el acceso hasta 7 días desde la última confirmación
+    if(!fromSheet&&(S.mode==='paid'||S.mode==='all')&&Date.now()-S.lastOk>7*DAY&&!PREVIEW){setMode('free');toast('Conéctate a internet para confirmar tu acceso')}
+    return {error:true};
+  }
+  const prev=S.mode;
+  if(j.mode==='all'||j.mode==='paid'||j.mode==='pending'){
+    S.email=e;store.set('email',e);S.lastOk=Date.now();store.set('lastOk',S.lastOk);
+    if(!PREVIEW)setMode(j.mode);
+    if(j.mode!=='pending'||PREVIEW)await loadFull();
+  } else if(j.mode==='revoked'){
+    S.email='';store.set('email','');purgeCache();
+    if(!PREVIEW){setMode('free');await reloadPublic().catch(()=>{});render();if(prev==='paid'||prev==='all')sheet(`<h2>Tu acceso fue cancelado</h2><p class="sub">Tu compra fue reembolsada o cancelada, por eso el contenido completo ya no está disponible. Puedes seguir usando la versión gratuita.</p><button class="btn" data-act="paywall">Ver el plan completo</button>`)}
+  } else if(!fromSheet&&!PREVIEW&&(prev==='paid'||prev==='all')){
+    S.email='';store.set('email','');purgeCache();setMode('free');await reloadPublic().catch(()=>{});render();
+  }
+  return j;
+}
+function activateSheet(msg){
+  sheet(`<h2>Activa tu acceso</h2><p class="sub">Escribe el correo que usaste en tu compra. Tu contenido se desbloquea al instante en este celular.</p>
+  <form id="actform"><label for="actemail" style="display:block;font-weight:600;margin-bottom:6px">Correo de tu compra</label>
+  <input id="actemail" type="email" autocomplete="email" inputmode="email" required placeholder="tucorreo@ejemplo.com" value="${esc(S.email||'')}" style="width:100%;font:inherit;font-size:17px;padding:14px;border:1px solid var(--line);border-radius:14px;margin-bottom:12px">
+  <p id="actmsg" class="fine" style="text-align:left;margin:0 0 12px;color:var(--ink2)">${msg||''}</p>
+  <button class="btn lamp" type="submit">Activar mi acceso</button></form>
+  <p class="fine">¿Pagaste con efectivo o en el banco? Tu acceso se activa cuando el pago se confirme.</p>`);
+  const f=$('#actform');f.addEventListener('submit',async ev=>{
+    ev.preventDefault();const m=$('#actmsg'),b=f.querySelector('button');b.disabled=true;b.textContent='Verificando…';
+    const j=await syncAccess($('#actemail').value,true);b.disabled=false;b.textContent='Activar mi acceso';
+    if(!j||j.error){m.textContent='No pudimos conectar. Revisa tu internet e inténtalo de nuevo.';return}
+    if(j.mode==='all'||j.mode==='paid'){f.closest('.scrim').remove();toast('¡Listo! Tu acceso está activo');if(j.mode==='paid'&&!PREVIEW)setTimeout(upsell,400);return}
+    if(j.mode==='pending'){f.closest('.scrim').remove();toast('Tu pedido está reservado');return}
+    if(j.mode==='revoked'){m.textContent='Esta compra fue reembolsada o cancelada.';return}
+    m.textContent='No encontramos una compra con este correo. Usa el mismo correo de tu compra. Si acabas de pagar, espera unos minutos e inténtalo de nuevo.';
+  });
+  setTimeout(()=>$('#actemail')?.focus(),50);
+}
 function openUrl(u,fallback){if(u){location.href=u}else toast(fallback)}
 document.querySelectorAll('#modes button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.scrim').forEach(s=>s.remove());setMode(b.dataset.mode);$('#panel').classList.remove('open')}));
 $('#reset').addEventListener('click',()=>{S.done=[];S.favs=[];S.notes={};S.hidden={};['done','favs','notes'].forEach(k=>store.set(k,k==='notes'?{}:[]));render()});
@@ -694,7 +773,9 @@ Promise.all(['psalms','prayers','plan30'].map(f=>fetch('data/'+f+'.json').then(r
   D={psalms:ps,prayers:pr,plan:pl};
   const cnt={};pr.items.forEach(p=>{if(!firstOfCat[p.cat])firstOfCat[p.cat]=p.id;cnt[p.cat]=(cnt[p.cat]||0);rankInCat[p.id]=cnt[p.cat]++});
   render(true);
-  if(window.__activated){setTimeout(()=>{if(window.__activated==='paid'){upsell()}else toast('¡Listo! Todo tu contenido está desbloqueado')},400)}
+  if(ASK_EMAIL&&!DEMO)setTimeout(()=>activateSheet(),300);
+  if(!DEMO&&S.email)syncAccess();
+  else if(!DEMO&&!PREVIEW&&(S.mode==='paid'||S.mode==='all')){setMode('free')}
 }).catch(()=>{$('#app').innerHTML='<div class="empty">No se pudo cargar el contenido. Recarga la página.</div>'});
 })();
 </script>
