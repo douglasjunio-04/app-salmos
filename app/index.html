@@ -688,7 +688,7 @@ document.addEventListener('click',e=>{
 function setMode(m){S.mode=m;if(!DEMO)store.set('mode',m);render()}
 /* ---------- precio en moneda local ---------- */
 let FX={currency:'USD',rate:1,country:''};
-if(!DEMO&&!PREVIEW&&location.protocol==='https:'){fetch('/api/precio').then(r=>r.ok?r.json():null).then(j=>{if(j&&j.rate&&j.currency)FX=j}).catch(()=>{})}
+if(!DEMO&&!PREVIEW&&location.protocol==='https:'){fetch('/api/precio/').then(r=>r.ok?r.json():null).then(j=>{if(j&&j.rate&&j.currency)FX=j}).catch(()=>{})}
 function money(usd){
   if(FX.currency==='USD')return 'US$ '+usd.toFixed(2).replace('.',',').replace(',00','');
   const dec=['PEN','BRL','EUR'].includes(FX.currency)?2:0;
@@ -700,7 +700,7 @@ function fxNote(usd){return FX.currency==='USD'?'':`<p class="fine" style="margi
 const DAY=864e5;
 function needFull(){return `<div class="gate"><h4>Descargando tu contenido</h4><p>${navigator.onLine===false?'Conéctate a internet una vez para descargar tu contenido completo.':'Estamos cargando tu contenido completo. Si no aparece en unos segundos, revisa tu conexión.'}</p><button class="btn" data-act="sync">Intentar de nuevo</button></div>`}
 async function apiContent(f){
-  const r=await fetch('/api/contenido?f='+encodeURIComponent(f),{headers:{'x-email':S.email}});
+  const r=await fetch('/api/contenido/?f='+encodeURIComponent(f),{headers:{'x-email':S.email}});
   if(!r.ok)throw new Error(r.status);
   return r.json();
 }
@@ -725,7 +725,7 @@ async function syncAccess(email,fromSheet){
   if(!e)return null;
   let j;
   try{
-    const r=await fetch('/api/acceso',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e})});
+    const r=await fetch('/api/acceso/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e})});
     if(!r.ok)throw new Error(r.status);
     j=await r.json();
   }catch(err){
