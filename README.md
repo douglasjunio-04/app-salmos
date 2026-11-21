@@ -32,3 +32,7 @@ Texto bíblico: Reina-Valera 1909 (domínio público).
 ## Biblioteca de Estudo (upsell)
 
 `app/data/bib/`: Mateus, Marcos, Lucas e João versículo por versículo, Provérbios 1-31 e 194 versículos-chave. Liberada com `#biblioteca-1e145dbf` (upsell US$ 19,90 ou downsell US$ 10,90; os dois entregam o mesmo conteúdo). Quem não tem acesso lê o começo de cada capítulo e vê a oferta.
+
+## Pagamento pendente (boleto, OXXO, PIX)
+
+`https://app-salmos.vercel.app/app/#pendiente-221a4216` libera 21 salmos completos, 3 orações por situação e 7 dias do plano, com aviso de pedido reservado e opção de pagar com cartão. Nunca rebaixa quem já tem acesso completo.

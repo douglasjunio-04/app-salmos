@@ -221,6 +221,7 @@ button{font:inherit;color:inherit;cursor:pointer}
     <div class="seg" id="modes">
       <button data-mode="free">Visitante grátis<small>Vê os trechos grátis e os cadeados</small></button>
       <button data-mode="paid">Cliente — recusou o upsell<small>Tudo liberado, com banners de outros produtos</small></button>
+      <button data-mode="pending">Pagamento pendente<small>Boleto/OXXO aguardando: mais conteúdo liberado e aviso para concluir o pagamento</small></button>
       <button data-mode="all">Cliente — aceitou o upsell<small>Tudo liberado, inclusive a Biblioteca (Evangelhos, Provérbios, versículos)</small></button>
     </div>
     <h2>O que é grátis</h2>
@@ -268,6 +269,7 @@ const I={
 };
 
 const FREE_PS=[1,23,27,46,51,91,121];
+const PEND_PS=[1,4,16,19,23,27,32,34,37,40,46,51,62,73,84,90,91,103,121,139,145];
 const MOODS=[
  {id:'ansiedad',t:'Siento ansiedad o miedo',ps:[23,91,27,46,56,34],cat:'ansiedad'},
  {id:'paz',t:'Necesito paz',ps:[4,62,131,29,116],cat:'paz'},
@@ -291,23 +293,23 @@ const CONFIG={
   downsell:'',          // link do checkout da Biblioteca com desconto (downsell, US$ 10,90)
   links:{biblioteca:'',finanzas:'',ninos:''}, // páginas de venda dos banners
   // Página de obrigado da Hotmart deve abrir: https://SEU-DOMINIO/app/#acceso-3f385a2a
-  activar:{'acceso-3f385a2a':'paid','biblioteca-1e145dbf':'all'}
+  activar:{'acceso-3f385a2a':'paid','biblioteca-1e145dbf':'all','pendiente-221a4216':'pending'}
 };
 /* ====================================== */
 const PREVIEW=location.hash==='#preview';
 const DEMO=location.hash==='#demo';
-function checkActivation(){const k=location.hash.slice(1);const m=CONFIG.activar[k];if(!m)return null;try{const cur=localStorage.getItem('pcp_mode');const v=(m==='paid'&&cur==='"all"')?'all':m;localStorage.setItem('pcp_mode',JSON.stringify(v))}catch(e){}history.replaceState(null,'',location.pathname);return m}
+function checkActivation(){const k=location.hash.slice(1);const m=CONFIG.activar[k];if(!m)return null;try{const cur=localStorage.getItem('pcp_mode');const v=(m==='paid'&&cur==='"all"')?'all':(m==='pending'&&(cur==='"paid"'||cur==='"all"'))?JSON.parse(cur):m;localStorage.setItem('pcp_mode',JSON.stringify(v))}catch(e){}history.replaceState(null,'',location.pathname);return m}
 window.__activated=checkActivation();
 window.addEventListener('hashchange',()=>{if(checkActivation())location.reload()});
 let D={}, S={
   mode:DEMO?'free':store.get('mode','free'), tab:'hoy', stack:[], done:store.get('done',[]),
   favs:store.get('favs',[]), notes:store.get('notes',{}), fs:store.get('fs',18), hidden:{}, seenUpsell:false
 };
-const paid=()=>S.mode!=='free', hasUpsell=()=>S.mode==='all';
-const psFree=n=>paid()||FREE_PS.includes(n);
-let firstOfCat={};
-const prFree=p=>paid()||firstOfCat[p.cat]===p.id;
-const dayFree=d=>paid()||d<=3;
+const paid=()=>S.mode==='paid'||S.mode==='all', hasUpsell=()=>S.mode==='all', pending=()=>S.mode==='pending';
+const psFree=n=>paid()||FREE_PS.includes(n)||(pending()&&PEND_PS.includes(n));
+let firstOfCat={}, rankInCat={};
+const prFree=p=>paid()||firstOfCat[p.cat]===p.id||(pending()&&rankInCat[p.id]<3);
+const dayFree=d=>paid()||d<=(pending()?7:3);
 
 /* ---------- audio ---------- */
 let speaking=null;
@@ -358,7 +360,7 @@ function ctxBanner(kind){ // banner contextual al final de una lectura
 /* ---------- vistas ---------- */
 function vHome(){
   const v=vodToday(), nd=nextDay(), pct=Math.round(S.done.length/30*100);
-  let h=`<div class="hello"><div class="brand">Palabra con Poder</div><h1>${greet()}</h1></div>
+  let h=`<div class="hello"><div class="brand">Palabra con Poder</div><h1>${greet()}</h1></div>${pending()&&!DEMO?`<div class="unlock" style="margin-top:16px"><b>Tu pedido está reservado</b><p>Mientras se confirma tu pago, ya puedes usar más contenido: 21 salmos completos, 3 oraciones por situación y los primeros 7 días del plan. Cuando el pago se confirme, recibirás por correo tu enlace de acceso completo.</p><button class="btn" data-act="paywall">Ver cómo completar mi pago</button></div>`:''}
   <section class="vod" aria-label="Versículo del día"><div class="k">Versículo del día</div>
    <blockquote>${esc(v.t)}</blockquote><div class="ref">${esc(v.ref)}</div>
    <div class="row"><button class="pill" data-act="share">${I.share} Compartir</button><button class="pill" data-act="psalm" data-n="${v.n}">Leer el salmo</button></div></section>
@@ -372,7 +374,7 @@ function vHome(){
   if(S.favs.length){
     h+=`<div class="sect"><h3>Tus favoritos</h3><div class="list">${S.favs.slice(-4).reverse().map(favItem).join('')}</div></div>`;
   }
-  if(!paid()&&!DEMO){
+  if(!paid()&&!pending()&&!DEMO){
     h+=`<div class="unlock"><b>Estás usando la versión gratuita</b><p>Tienes 7 salmos completos, una oración por cada situación y los primeros 3 días del plan. Con el plan completo abres los 150 Salmos, 188 oraciones y los 30 días.</p><button class="btn" data-act="paywall">Ver el plan completo</button></div>`;
   } else {
     const ks=['biblioteca','finanzas','ninos'].filter(k=>!(BAN[k].upsell&&hasUpsell())&&!S.hidden[k+'h']);
@@ -553,7 +555,14 @@ function top(title,right=''){return `<div class="topbar"><button class="back" da
 
 /* ---------- sheets ---------- */
 function sheet(html){const a=$('#app');const s=document.createElement('div');s.className='scrim';s.innerHTML=`<div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div>`;s.addEventListener('click',e=>{if(e.target===s)s.remove()});a.appendChild(s);s.querySelector('button')?.focus();return s}
+function pendingSheet(){
+  sheet(`<h2>Tu pedido está reservado</h2><p class="sub">Solo falta confirmar tu pago. En cuanto se confirme, recibirás por correo tu enlace para abrir todo el contenido.</p>
+  <ul class="ticks"><li>${I.tick}<span>Si elegiste pagar en efectivo, en banco o en una tienda, usa el comprobante que te enviamos por correo.</span></li><li>${I.tick}<span>Algunos métodos de pago pueden tardar unos días hábiles en confirmarse.</span></li><li>${I.tick}<span>Mientras tanto, ya tienes 21 salmos completos, 3 oraciones por situación y 7 días del plan.</span></li></ul>
+  <button class="btn lamp" data-act="buy">Prefiero pagar con tarjeta (se libera al instante)</button>
+  <p class="fine">Revisa también tu carpeta de spam o promociones.</p>`);
+}
 function paywall(){
+  if(pending()){pendingSheet();return}
   sheet(`<h2>Abre todos los Salmos y oraciones</h2><p class="sub">Todo lo que necesitas para orar y entender la Palabra, en tu celular.</p>
   <ul class="ticks">${['Los 150 Salmos explicados versículo por versículo','188 oraciones para cada momento de tu vida','Los 30 días del plan Conexión Vital','Escucha cada salmo y oración en voz alta','Funciona sin internet una vez instalado'].map(t=>`<li>${I.tick}<span>${t}</span></li>`).join('')}</ul>
   <div class="price"><b>${money(CONFIG.price.plan)}</b><s>${money(CONFIG.price.planFrom)}</s><span>Pago único</span></div>${fxNote(CONFIG.price.plan)}
@@ -683,7 +692,7 @@ $('#ptoggle').addEventListener('click',()=>{const p=$('#panel');p.classList.togg
 
 Promise.all(['psalms','prayers','plan30'].map(f=>fetch('data/'+f+'.json').then(r=>r.json()))).then(([ps,pr,pl])=>{
   D={psalms:ps,prayers:pr,plan:pl};
-  pr.items.forEach(p=>{if(!firstOfCat[p.cat])firstOfCat[p.cat]=p.id});
+  const cnt={};pr.items.forEach(p=>{if(!firstOfCat[p.cat])firstOfCat[p.cat]=p.id;cnt[p.cat]=(cnt[p.cat]||0);rankInCat[p.id]=cnt[p.cat]++});
   render(true);
   if(window.__activated){setTimeout(()=>{if(window.__activated==='paid'){upsell()}else toast('¡Listo! Todo tu contenido está desbloqueado')},400)}
 }).catch(()=>{$('#app').innerHTML='<div class="empty">No se pudo cargar el contenido. Recarga la página.</div>'});
