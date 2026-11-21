@@ -24,3 +24,7 @@ Atenção: a liberação é feita no próprio celular. Quem tiver o link consegu
 Site estático, sem build. Na Vercel: importar o repositório, Framework "Other", sem comando de build.
 
 Texto bíblico: Reina-Valera 1909 (domínio público).
+
+## Preço na moeda do visitante
+
+`api/precio.js` lê o país do visitante (cabeçalho `x-vercel-ip-country` da Vercel) e busca o câmbio do dólar (ExchangeRate-API, atualizado a cada 6 horas). O app mostra o preço aproximado em MXN, COP, PEN, CLP, BRL ou EUR; nos demais países, em dólar. Os valores em dólar ficam em `CONFIG.price`, no `app/index.html`, e devem ser iguais aos cadastrados na Hotmart.

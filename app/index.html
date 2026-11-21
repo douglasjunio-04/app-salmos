@@ -233,7 +233,7 @@ button{font:inherit;color:inherit;cursor:pointer}
     </ul>
     <h2>Ainda não é real</h2>
     <ul>
-      <li>Preços (US$ 9,90 e US$ 14,90) e o checkout: o botão de compra só simula</li>
+      <li>Na prévia o preço aparece em dólar e a compra só simula; no site publicado aparece na moeda do visitante</li>
       <li>Login e liberação via Hotmart</li>
       <li>Planos de 21 dias, Hogar Blindado e 52 semanas: entram na próxima rodada de revisão</li>
     </ul>
@@ -283,6 +283,8 @@ const VOD=[[23,1],[91,1],[46,1],[121,2],[27,1],[34,18],[37,5],[55,22],[56,3],[62
 
 /* ===== CONFIGURAÇÃO (edite aqui) ===== */
 const CONFIG={
+  // Preços em dólar (o mesmo valor cadastrado na Hotmart). O app mostra o equivalente na moeda do visitante.
+  price:{plan:9.90, planFrom:27, upsell:14.90, upsellFrom:37},
   checkout:'',          // link do checkout Hotmart do Plano Completo
   upsell:'',            // link do checkout da Biblioteca de Estudo (upsell)
   links:{biblioteca:'',finanzas:'',ninos:''}, // páginas de venda dos banners
@@ -482,15 +484,15 @@ function sheet(html){const a=$('#app');const s=document.createElement('div');s.c
 function paywall(){
   sheet(`<h2>Abre todos los Salmos y oraciones</h2><p class="sub">Todo lo que necesitas para orar y entender la Palabra, en tu celular.</p>
   <ul class="ticks">${['Los 150 Salmos explicados versículo por versículo','188 oraciones para cada momento de tu vida','Los 30 días del plan Conexión Vital','Escucha cada salmo y oración en voz alta','Funciona sin internet una vez instalado'].map(t=>`<li>${I.tick}<span>${t}</span></li>`).join('')}</ul>
-  <div class="price"><b>US$ 9,90</b><s>US$ 27</s><span>Pago único</span></div>
-  <button class="btn lamp" data-act="buy">Desbloquear por US$ 9,90</button>
+  <div class="price"><b>${money(CONFIG.price.plan)}</b><s>${money(CONFIG.price.planFrom)}</s><span>Pago único</span></div>${fxNote(CONFIG.price.plan)}
+  <button class="btn lamp" data-act="buy">Desbloquear por ${money(CONFIG.price.plan)}</button>
   <p class="fine">Acceso para siempre. Garantía de 7 días: si no te gusta, te devolvemos tu dinero.</p>`);
 }
 function upsell(){
   sheet(`<div class="okmark">${I.tick}</div><h2>¡Listo! Tu plan completo está activo</h2><p class="sub">Ya puedes leer los 150 Salmos y todas las oraciones.</p>
   <div class="oto"><div class="tag">Oferta solo para hoy</div><h2 style="font-size:22px;margin-top:6px">Biblioteca de Estudio Bíblico</h2>
    <ul class="ticks" style="margin-bottom:10px">${['Mateo, Marcos, Lucas y Juan explicados versículo por versículo','Los 31 capítulos de Proverbios explicados','300 versículos clave con su explicación'].map(t=>`<li>${I.tick}<span>${t}</span></li>`).join('')}</ul>
-   <div class="price" style="margin:0"><b>US$ 14,90</b><s>US$ 37</s></div></div>
+   <div class="price" style="margin:0"><b>${money(CONFIG.price.upsell)}</b><s>${money(CONFIG.price.upsellFrom)}</s></div>${fxNote(CONFIG.price.upsell)}</div>
   <button class="btn lamp" data-act="upsell-yes">Agregar a mi plan</button><button class="btn ghost" data-act="upsell-no" style="margin-top:6px">No, gracias</button>`);
 }
 async function share(){
@@ -568,6 +570,16 @@ document.addEventListener('click',e=>{
   }
 });
 function setMode(m){S.mode=m;if(!DEMO)store.set('mode',m);render()}
+/* ---------- precio en moneda local ---------- */
+let FX={currency:'USD',rate:1,country:''};
+if(!DEMO&&!PREVIEW&&location.protocol==='https:'){fetch('/api/precio').then(r=>r.ok?r.json():null).then(j=>{if(j&&j.rate&&j.currency)FX=j}).catch(()=>{})}
+function money(usd){
+  if(FX.currency==='USD')return 'US$ '+usd.toFixed(2).replace('.',',').replace(',00','');
+  const dec=['PEN','BRL','EUR'].includes(FX.currency)?2:0;
+  try{return new Intl.NumberFormat('es-'+(FX.country||'MX'),{style:'currency',currency:FX.currency,currencyDisplay:'narrowSymbol',minimumFractionDigits:dec,maximumFractionDigits:dec}).format(usd*FX.rate)+(['MXN','COP','CLP'].includes(FX.currency)?' '+FX.currency:'')}
+  catch(e){return 'US$ '+usd.toFixed(2)}
+}
+function fxNote(usd){return FX.currency==='USD'?'':`<p class="fine" style="margin:-4px 0 12px">Precio aproximado en tu moneda (US$ ${usd.toFixed(2).replace('.',',')}). El valor exacto aparece en la página de pago.</p>`}
 function openUrl(u,fallback){if(u){location.href=u}else toast(fallback)}
 document.querySelectorAll('#modes button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.scrim').forEach(s=>s.remove());setMode(b.dataset.mode);$('#panel').classList.remove('open')}));
 $('#reset').addEventListener('click',()=>{S.done=[];S.favs=[];S.notes={};S.hidden={};['done','favs','notes'].forEach(k=>store.set(k,k==='notes'?{}:[]));render()});
