@@ -221,7 +221,7 @@ button{font:inherit;color:inherit;cursor:pointer}
     <div class="seg" id="modes">
       <button data-mode="free">Visitante grátis<small>Vê os trechos grátis e os cadeados</small></button>
       <button data-mode="paid">Cliente — recusou o upsell<small>Tudo liberado, com banners de outros produtos</small></button>
-      <button data-mode="all">Cliente — aceitou o upsell<small>Tudo liberado, banners só de produtos que ele não tem</small></button>
+      <button data-mode="all">Cliente — aceitou o upsell<small>Tudo liberado, inclusive a Biblioteca (Evangelhos, Provérbios, versículos)</small></button>
     </div>
     <h2>O que é grátis</h2>
     <ul>
@@ -263,6 +263,7 @@ const I={
  share:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 002 2h10a2 2 0 002-2v-6"/></svg>',
  tick:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4 10-10"/></svg>',
  search:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+ shelf:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16M8 4v16M12 6l4 14M17 4h3v16h-3z"/></svg>',
  x:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'
 };
 
@@ -284,9 +285,10 @@ const VOD=[[23,1],[91,1],[46,1],[121,2],[27,1],[34,18],[37,5],[55,22],[56,3],[62
 /* ===== CONFIGURAÇÃO (edite aqui) ===== */
 const CONFIG={
   // Preços em dólar (o mesmo valor cadastrado na Hotmart). O app mostra o equivalente na moeda do visitante.
-  price:{plan:9.90, planFrom:27, upsell:14.90, upsellFrom:37},
+  price:{plan:9.90, planFrom:27, upsell:19.90, upsellFrom:37, downsell:10.90},
   checkout:'',          // link do checkout Hotmart do Plano Completo
-  upsell:'',            // link do checkout da Biblioteca de Estudo (upsell)
+  upsell:'',            // link do checkout da Biblioteca de Estudo (upsell, US$ 19,90)
+  downsell:'',          // link do checkout da Biblioteca com desconto (downsell, US$ 10,90)
   links:{biblioteca:'',finanzas:'',ninos:''}, // páginas de venda dos banners
   // Página de obrigado da Hotmart deve abrir: https://SEU-DOMINIO/app/#acceso-3f385a2a
   activar:{'acceso-3f385a2a':'paid','biblioteca-1e145dbf':'all'}
@@ -337,7 +339,7 @@ function setTab(t){stopAudio();S.tab=t;S.stack=[];render(true)}
 
 /* ---------- banners (post-compra) ---------- */
 const BAN={
- biblioteca:{t:'Biblioteca de Estudio Bíblico',d:'Los 4 Evangelios y Proverbios explicados versículo por versículo.',cta:'Ver la biblioteca',art:'Evangelios y Proverbios',bg:'#1D2A3B',upsell:true},
+ biblioteca:{t:'Biblioteca de Estudio Bíblico',d:'Los 4 Evangelios, Proverbios y 194 versículos clave, explicados versículo por versículo.',cta:'Ver la biblioteca',art:'Evangelios y Proverbios',bg:'#1D2A3B',upsell:true},
  finanzas:{t:'La Sabiduría Bíblica en tus Finanzas',d:'10 claves bíblicas para salir de las deudas y administrar con propósito.',cta:'Conocer el libro',art:'Finanzas con fe',bg:'#56653C'},
  ninos:{t:'Corazones Agradecidos',d:'Diario de gratitud y fe para niños, con actividades para colorear.',cta:'Ver el diario',art:'Para niños',bg:'#9A6B12'}
 };
@@ -477,6 +479,76 @@ function vDay(n){
    <textarea id="note" data-d="${n}" placeholder="Escribe aquí. Solo tú lo ves.">${esc(S.notes[n]||'')}</textarea>
    <div class="done">${ok?`<button class="btn ghost" data-act="undo" data-d="${n}">Día completado ✓ · Desmarcar</button>`:`<button class="btn lamp" data-act="complete" data-d="${n}">Marcar el día ${n} como completado</button>`}</div></article>`;
 }
+/* ---------- biblioteca ---------- */
+const BOOKS=[['mateo','Mateo','28 capítulos'],['marcos','Marcos','16 capítulos'],['lucas','Lucas','24 capítulos'],['juan','Juan','21 capítulos']];
+const BIB={};
+function bibData(name){
+  if(BIB[name])return BIB[name];
+  if(BIB[name]===undefined){BIB[name]=null;fetch('data/bib/'+name+'.json').then(r=>r.json()).then(j=>{BIB[name]=j;render()}).catch(()=>{BIB[name]=undefined;toast('No se pudo cargar. Revisa tu conexión.')})}
+  return null;
+}
+const bibOpen=()=>hasUpsell();
+const loading='<div class="empty">Cargando…</div>';
+function bibGate(what){return `<div class="gate"><h4>${what}</h4><p>${paid()?'Agrega la Biblioteca de Estudio Bíblico a tu plan y lee los 4 Evangelios, Proverbios y los versículos clave completos.':'Primero desbloquea el plan completo; después podrás agregar la Biblioteca de Estudio Bíblico.'}</p><button class="btn" data-act="bib-offer">${paid()?'Ver la Biblioteca':'Ver el plan completo'}</button></div>`}
+function vBib(){
+  return `<div class="topbar"><h2 style="font-family:var(--serif);font-size:26px;font-weight:500">Biblioteca</h2></div>
+  <p class="pad" style="margin:0 0 14px;color:var(--ink2)">${bibOpen()?'Tu Biblioteca de Estudio Bíblico.':'Evangelios y Proverbios explicados versículo por versículo.'}</p>
+  <div class="sect" style="margin-top:0"><h3>Los Evangelios</h3><div class="cats">${BOOKS.map(([k,t,n])=>`<button class="cat" data-act="book" data-b="${k}"><b>${t}</b><small>${n}</small></button>`).join('')}</div></div>
+  <div class="sect"><h3>Sabiduría</h3><div class="list">
+   <button class="item" data-act="prov"><div class="t"><b>Proverbios</b><small>31 capítulos explicados versículo por versículo</small></div>${bibOpen()?'':`<span class="lock">${I.lock}</span>`}</button>
+   <button class="item" data-act="vers"><div class="t"><b>Versículos clave</b><small>194 versículos de toda la Biblia, explicados</small></div>${bibOpen()?'':`<span class="lock">${I.lock}</span>`}</button>
+  </div></div>
+  ${bibOpen()?'':`<div class="unlock"><b>Biblioteca de Estudio Bíblico</b><p>Lee gratis el comienzo de cada capítulo. Para leerlo todo, agrega la Biblioteca a tu plan.</p><button class="btn" data-act="bib-offer">${paid()?'Ver la Biblioteca':'Ver el plan completo'}</button></div>`}`;
+}
+function vBook(b){
+  const d=bibData(b), name=BOOKS.find(x=>x[0]===b)[1];
+  if(!d)return top('Evangelio de '+name)+loading;
+  return top('Evangelio de '+name)+`<div class="list">${d.map(ch=>`<button class="item" data-act="chap" data-k="${b}-${ch.c}"><div class="num">${ch.c}</div><div class="t"><b>Capítulo ${ch.c}</b><small>${esc((ch.intro||'').split(/(?<=\.)\s/)[0].slice(0,110))}</small></div>${bibOpen()?'':`<span class="lock">${I.lock}</span>`}</button>`).join('')}</div>`;
+}
+function bblk(b,lab1,lab2){return `<div class="blk"><p class="verse">${b.text.map(t=>`<sup>${t.v}</sup>${esc(t.t)}`).join(' ')}</p><div class="note"><span class="lbl">${lab1}</span>${esc(b.exp)}</div>${b.app?`<div class="note life"><span class="lbl">${lab2}</span>${esc(b.app)}</div>`:''}</div>`}
+function readerTools(key){return `<div class="tools"><button class="tool" aria-pressed="${speaking===key}" data-act="listen" data-k="${key}">${speaking===key?I.stop+' Detener':I.play+' Escuchar'}</button><button class="tool" data-act="fs" data-d="-1" aria-label="Letra más pequeña">A−</button><button class="tool" data-act="fs" data-d="1" aria-label="Letra más grande">A+</button></div>`}
+function vChap(k){
+  const [b,c]=k.split('-'), d=bibData(b), name=BOOKS.find(x=>x[0]===b)[1];
+  if(!d)return top(name+' '+c)+loading;
+  const ch=d.find(x=>x.c===+c);
+  let h=top(name+' '+c)+`<article class="reader"><div class="kicker">Evangelio de ${name}</div><h1>Capítulo ${c}</h1>${ch.intro?`<p class="intro">${esc(ch.intro)}</p>`:''}`;
+  if(bibOpen()){
+    S._listen={['bib'+k]:name+' capítulo '+c+'. '+ch.blocks.map(x=>x.text.map(t=>t.t).join(' ')+'. '+x.exp).join(' ')};
+    h+=readerTools('bib'+k)+ch.blocks.map(x=>bblk(x,'Explicación','Para tu vida')).join('');
+    const nx=d.find(x=>x.c===+c+1);
+    if(nx)h+=`<div class="done"><button class="btn lamp" data-act="chap" data-k="${b}-${+c+1}">Siguiente: capítulo ${+c+1}</button></div>`;
+    h+='</article>';
+  } else h+=`<div class="fade">${ch.blocks.slice(0,2).map(x=>bblk(x,'Explicación','Para tu vida')).join('')}</div>${bibGate('Sigue leyendo '+name+' '+c)}</article>`;
+  return h;
+}
+function vProv(){
+  const d=bibData('proverbios'); if(!d)return top('Proverbios')+loading;
+  return top('Proverbios')+`<div class="list">${d.map(ch=>`<button class="item" data-act="provc" data-c="${ch.c}"><div class="num">${ch.c}</div><div class="t"><b>Proverbios ${ch.c}</b><small>${esc((ch.ctx.concepto||ch.ctx.contexto||'').split(/(?<=\.)\s/)[0].slice(0,110))}</small></div>${bibOpen()?'':`<span class="lock">${I.lock}</span>`}</button>`).join('')}</div>`;
+}
+function vProvChap(c){
+  const d=bibData('proverbios'); if(!d)return top('Proverbios '+c)+loading;
+  const ch=d.find(x=>x.c===c), x=ch.ctx;
+  let h=top('Proverbios '+c)+`<article class="reader"><div class="kicker">Proverbios</div><h1>Capítulo ${c}</h1>
+   <div class="tip" style="margin-bottom:6px">${x.autor?`<p style="margin:0 0 8px"><b>Autor:</b> ${esc(x.autor)}</p>`:''}${x.fecha?`<p style="margin:0 0 8px"><b>Fecha:</b> ${esc(x.fecha)}</p>`:''}${x.contexto?`<p style="margin:0 0 8px"><b>Contexto:</b> ${esc(x.contexto)}</p>`:''}${x.concepto?`<p style="margin:0"><b>Idea central:</b> ${esc(x.concepto)}</p>`:''}</div>`;
+  if(bibOpen()){
+    S._listen={['prov'+c]:'Proverbios capítulo '+c+'. '+ch.blocks.map(b=>b.text.map(t=>t.t).join(' ')+'. '+b.exp).join(' ')};
+    h+=readerTools('prov'+c)+ch.blocks.map(b=>bblk(b,'Explicación','')).join('');
+    if(x.curiosidad)h+=`<div class="question"><b>¿Sabías que…?</b><p style="font-size:18px">${esc(x.curiosidad)}</p></div>`;
+    if(c<31)h+=`<div class="done"><button class="btn lamp" data-act="provc" data-c="${c+1}">Siguiente: Proverbios ${c+1}</button></div>`;
+    h+='</article>';
+  } else h+=`<div class="fade">${ch.blocks.slice(0,2).map(b=>bblk(b,'Explicación','')).join('')}</div>${bibGate('Sigue leyendo Proverbios '+c)}</article>`;
+  return h;
+}
+function vVers(){
+  const d=bibData('versiculos'); if(!d)return top('Versículos clave')+loading;
+  const q=(S.vq||'').toLowerCase().trim();
+  let list=d.map((v,i)=>({...v,i}));
+  if(q)list=list.filter(v=>(v.ref+' '+v.t+' '+v.exp).toLowerCase().includes(q));
+  const shown=bibOpen()?list:list.slice(0,5);
+  return top('Versículos clave')+`<label class="search">${I.search}<input id="vq" type="search" placeholder="Busca por libro o palabra" value="${esc(S.vq||'')}" aria-label="Buscar versículo"></label>
+  <div class="list">${shown.map(v=>`<button class="item" data-act="vtoggle" data-i="${v.i}" aria-expanded="${S.vopen==String(v.i)}"><div class="t"><b>${esc(v.ref)}</b><small style="font-family:var(--serif);font-size:16px;color:var(--ink)">${esc(v.t)}</small>${S.vopen==String(v.i)?`<small style="margin-top:8px">${esc(v.exp)}</small>`:''}</div></button>`).join('')}</div>
+  ${bibOpen()?'':`<div class="pad" style="margin-top:16px">${bibGate('Hay '+(list.length-shown.length)+' versículos más')}</div>`}`;
+}
 function top(title,right=''){return `<div class="topbar"><button class="back" data-act="back" aria-label="Volver">${I.back}</button><h2>${esc(title)}</h2>${right}</div>`}
 
 /* ---------- sheets ---------- */
@@ -488,10 +560,24 @@ function paywall(){
   <button class="btn lamp" data-act="buy">Desbloquear por ${money(CONFIG.price.plan)}</button>
   <p class="fine">Acceso para siempre. Garantía de 7 días: si no te gusta, te devolvemos tu dinero.</p>`);
 }
+const BIB_TICKS=['Mateo, Marcos, Lucas y Juan explicados versículo por versículo','Los 31 capítulos de Proverbios explicados','194 versículos clave de toda la Biblia con su explicación'];
+function bibOffer(){
+  if(!paid()){paywall();return}
+  sheet(`<h2>Biblioteca de Estudio Bíblico</h2><p class="sub">Entiende los Evangelios y Proverbios como nunca antes, con la misma explicación clara de los Salmos.</p>
+  <ul class="ticks">${BIB_TICKS.map(t=>`<li>${I.tick}<span>${t}</span></li>`).join('')}</ul>
+  <div class="price"><b>${money(CONFIG.price.upsell)}</b><s>${money(CONFIG.price.upsellFrom)}</s><span>Pago único</span></div>${fxNote(CONFIG.price.upsell)}
+  <button class="btn lamp" data-act="upsell-yes">Agregar a mi plan</button>`);
+}
+function downsell(){
+  sheet(`<h2>Espera: tu última oportunidad</h2><p class="sub">Entendemos que el momento cuenta. Llévate la Biblioteca de Estudio Bíblico completa con un precio especial, solo ahora.</p>
+  <ul class="ticks">${BIB_TICKS.map(t=>`<li>${I.tick}<span>${t}</span></li>`).join('')}</ul>
+  <div class="price"><b>${money(CONFIG.price.downsell)}</b><s>${money(CONFIG.price.upsell)}</s><span>Precio especial</span></div>${fxNote(CONFIG.price.downsell)}
+  <button class="btn lamp" data-act="downsell-yes">Sí, la quiero por ${money(CONFIG.price.downsell)}</button><button class="btn ghost" data-act="downsell-no" style="margin-top:6px">No, gracias</button>`);
+}
 function upsell(){
   sheet(`<div class="okmark">${I.tick}</div><h2>¡Listo! Tu plan completo está activo</h2><p class="sub">Ya puedes leer los 150 Salmos y todas las oraciones.</p>
   <div class="oto"><div class="tag">Oferta solo para hoy</div><h2 style="font-size:22px;margin-top:6px">Biblioteca de Estudio Bíblico</h2>
-   <ul class="ticks" style="margin-bottom:10px">${['Mateo, Marcos, Lucas y Juan explicados versículo por versículo','Los 31 capítulos de Proverbios explicados','300 versículos clave con su explicación'].map(t=>`<li>${I.tick}<span>${t}</span></li>`).join('')}</ul>
+   <ul class="ticks" style="margin-bottom:10px">${BIB_TICKS.map(t=>`<li>${I.tick}<span>${t}</span></li>`).join('')}</ul>
    <div class="price" style="margin:0"><b>${money(CONFIG.price.upsell)}</b><s>${money(CONFIG.price.upsellFrom)}</s></div>${fxNote(CONFIG.price.upsell)}</div>
   <button class="btn lamp" data-act="upsell-yes">Agregar a mi plan</button><button class="btn ghost" data-act="upsell-no" style="margin-top:6px">No, gracias</button>`);
 }
@@ -528,15 +614,16 @@ if('serviceWorker' in navigator&&!DEMO&&!PREVIEW&&location.protocol==='https:'){
 function render(scrollTop){
   const app=$('#app'); const cur=S.stack[S.stack.length-1];
   let body;
-  if(cur){const [t,a]=cur;body=t==='psalm'?vPsalm(+a):t==='mood'?vMood(a):t==='cat'?vCat(a):t==='prayer'?vPrayer(a):t==='day'?vDay(+a):''}
-  else body=S.tab==='hoy'?vHome():S.tab==='salmos'?vPsalms():S.tab==='oraciones'?vPrayers():vPlans();
+  if(cur){const [t,a]=cur;body=t==='psalm'?vPsalm(+a):t==='mood'?vMood(a):t==='cat'?vCat(a):t==='prayer'?vPrayer(a):t==='day'?vDay(+a):t==='book'?vBook(a):t==='chap'?vChap(a):t==='prov'?vProv():t==='provc'?vProvChap(+a):t==='vers'?vVers():''}
+  else body=S.tab==='hoy'?vHome():S.tab==='salmos'?vPsalms():S.tab==='oraciones'?vPrayers():S.tab==='bib'?vBib():vPlans();
   const prev=$('.screen',app);const st=prev&&!scrollTop?prev.scrollTop:0;
   const sheets=[...app.querySelectorAll('.scrim')];
   app.innerHTML=`<main class="screen" style="--fs:${S.fs}px">${body}</main>
-  <nav class="tabs" aria-label="Secciones">${[['hoy','Hoy',I.sun],['salmos','Salmos',I.book],['oraciones','Oraciones',I.hands],['planes','Planes',I.path]].map(([k,t,ic])=>`<button data-act="tab" data-t="${k}" ${S.tab===k?'aria-current="page"':''}>${ic}${t}</button>`).join('')}</nav>`;
+  <nav class="tabs" aria-label="Secciones">${[['hoy','Hoy',I.sun],['salmos','Salmos',I.book],['oraciones','Oraciones',I.hands],['planes','Planes',I.path],['bib','Biblioteca',I.shelf]].map(([k,t,ic])=>`<button data-act="tab" data-t="${k}" ${S.tab===k?'aria-current="page"':''}>${ic}${t}</button>`).join('')}</nav>`;
   sheets.forEach(s=>app.appendChild(s));
   $('.screen',app).scrollTop=st;
   const q=$('#q');if(q){q.addEventListener('input',e=>{S.q=e.target.value;const pos=e.target.selectionStart;render();const n=$('#q');n.focus();n.setSelectionRange(pos,pos)})}
+  const vq=$('#vq');if(vq){vq.addEventListener('input',e=>{S.vq=e.target.value;const pos=e.target.selectionStart;render();const n=$('#vq');n.focus();n.setSelectionRange(pos,pos)})}
   const note=$('#note');if(note)note.addEventListener('input',e=>{S.notes[e.target.dataset.d]=e.target.value;store.set('notes',S.notes)});
   document.querySelectorAll('#modes button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===S.mode));
 }
@@ -561,11 +648,20 @@ document.addEventListener('click',e=>{
    case'paywall':paywall();break;
    case'buy':if(PREVIEW||DEMO){closeSheet();setMode('paid');setTimeout(upsell,250)}else openUrl(CONFIG.checkout,'El pago estará disponible muy pronto');break;
    case'upsell-yes':if(PREVIEW||DEMO){closeSheet();setMode('all');toast('Biblioteca agregada a tu plan')}else openUrl(CONFIG.upsell,'Esta oferta estará disponible muy pronto');break;
-   case'upsell-no':closeSheet();break;
+   case'upsell-no':closeSheet();setTimeout(downsell,250);break;
+   case'downsell-yes':if(PREVIEW||DEMO){closeSheet();setMode('all');toast('Biblioteca agregada a tu plan')}else openUrl(CONFIG.downsell,'Esta oferta estará disponible muy pronto');break;
+   case'downsell-no':closeSheet();break;
+   case'bib-offer':bibOffer();break;
+   case'book':go(['book',ds.b]);break;
+   case'chap':go(['chap',ds.k]);break;
+   case'prov':go(['prov']);break;
+   case'provc':go(['provc',ds.c]);break;
+   case'vers':go(['vers']);break;
+   case'vtoggle':S.vopen=S.vopen===ds.i?null:ds.i;render();break;
    case'share':share();break;
    case'copyv':{const v=vodToday();navigator.clipboard?.writeText(`“${v.t}” — ${v.ref}`).then(()=>toast('Texto copiado'),()=>toast('No se pudo copiar'));break}
    case'hideban':S.hidden[ds.k]=1;render();break;
-   case'banner':if(PREVIEW||DEMO)toast('Aquí se abre la página de venta del producto');else openUrl(CONFIG.links[ds.k],'Muy pronto disponible');break;
+   case'banner':if(ds.k==='biblioteca'){bibOffer();break}if(PREVIEW||DEMO)toast('Aquí se abre la página de venta del producto');else openUrl(CONFIG.links[ds.k],'Muy pronto disponible');break;
    case'install':doInstall();break;
   }
 });
