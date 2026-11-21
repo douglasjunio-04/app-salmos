@@ -1,5 +1,5 @@
 // Service worker: funciona sem internet depois da primeira visita.
-const CACHE='pcp-v8';
+const CACHE='pcp-v9';
 const CORE=['./','index.html','manifest.webmanifest','data/psalms.json','data/prayers.json','data/plan30.json','icons/icon-192.png','icons/icon-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});

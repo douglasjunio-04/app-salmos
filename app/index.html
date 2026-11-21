@@ -290,8 +290,8 @@ const CONFIG={
   // Preços em dólar (o mesmo valor cadastrado na Hotmart). O app mostra o equivalente na moeda do visitante.
   price:{plan:9.90, planFrom:27, upsell:19.90, upsellFrom:37, downsell:10.90},
   checkout:'',          // link do checkout Hotmart do Plano Completo
-  upsell:'',            // link do checkout da Biblioteca de Estudo (upsell, US$ 19,90)
-  downsell:'',          // link do checkout da Biblioteca com desconto (downsell, US$ 10,90)
+  upsell:'https://pay.hotmart.com/X108597288O?off=etl2khpe',            // link do checkout da Biblioteca de Estudo (upsell, US$ 19,90)
+  downsell:'https://pay.hotmart.com/X108597288O?off=po3o4qm3',          // link do checkout da Biblioteca com desconto (downsell, US$ 10,90)
   links:{biblioteca:'',finanzas:'',ninos:''}, // páginas de venda dos banners
   // Página de obrigado da Hotmart deve abrir: https://SEU-DOMINIO/app/#acceso-3f385a2a
   activar:{'pendiente-221a4216':'pending'}
@@ -692,7 +692,7 @@ if(!DEMO&&!PREVIEW&&location.protocol==='https:'){fetch('/api/precio/').then(r=>
 function money(usd){
   if(FX.currency==='USD')return 'US$ '+usd.toFixed(2).replace('.',',').replace(',00','');
   const dec=['PEN','BRL','EUR'].includes(FX.currency)?2:0;
-  try{return new Intl.NumberFormat('es-'+(FX.country||'MX'),{style:'currency',currency:FX.currency,currencyDisplay:'narrowSymbol',minimumFractionDigits:dec,maximumFractionDigits:dec}).format(usd*FX.rate)+(['MXN','COP','CLP'].includes(FX.currency)?' '+FX.currency:'')}
+  try{return new Intl.NumberFormat('es-'+(FX.country||'MX'),{style:'currency',currency:FX.currency,currencyDisplay:'narrowSymbol',minimumFractionDigits:dec,maximumFractionDigits:dec}).format(usd*FX.rate)+(['MXN','COP','CLP','ARS'].includes(FX.currency)?' '+FX.currency:'')}
   catch(e){return 'US$ '+usd.toFixed(2)}
 }
 function fxNote(usd){return FX.currency==='USD'?'':`<p class="fine" style="margin:-4px 0 12px">Precio aproximado en tu moneda (US$ ${usd.toFixed(2).replace('.',',')}). El valor exacto aparece en la página de pago.</p>`}
@@ -738,6 +738,7 @@ async function syncAccess(email,fromSheet){
     S.email=e;store.set('email',e);S.lastOk=Date.now();store.set('lastOk',S.lastOk);
     if(!PREVIEW)setMode(j.mode);
     if(j.mode!=='pending'||PREVIEW)await loadFull();
+    if(!fromSheet&&!PREVIEW&&j.mode!==prev&&(j.mode==='all'||j.mode==='paid')){document.querySelectorAll('.scrim').forEach(x=>x.remove());render();toast(j.mode==='all'?'¡Listo! La Biblioteca ya está en tu app':'¡Listo! Tu plan completo está activo')}
   } else if(j.mode==='revoked'){
     S.email='';store.set('email','');purgeCache();
     if(!PREVIEW){setMode('free');await reloadPublic().catch(()=>{});render();if(prev==='paid'||prev==='all')sheet(`<h2>Tu acceso fue cancelado</h2><p class="sub">Tu compra fue reembolsada o cancelada, por eso el contenido completo ya no está disponible. Puedes seguir usando la versión gratuita.</p><button class="btn" data-act="paywall">Ver el plan completo</button>`)}
@@ -764,7 +765,9 @@ function activateSheet(msg){
   });
   setTimeout(()=>$('#actemail')?.focus(),50);
 }
-function openUrl(u,fallback){if(u){location.href=u}else toast(fallback)}
+function openUrl(u,fallback){if(!u)return toast(fallback);if(S.email&&u.includes('pay.hotmart.com'))u+=(u.includes('?')?'&':'?')+'email='+encodeURIComponent(S.email);location.href=u}
+// Ao voltar do checkout, confere de novo a compra (libera a Biblioteca sem recarregar).
+let lastSync=Date.now();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&S.email&&!PREVIEW&&!DEMO&&Date.now()-lastSync>20000){lastSync=Date.now();syncAccess(S.email)}});
 document.querySelectorAll('#modes button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.scrim').forEach(s=>s.remove());setMode(b.dataset.mode);$('#panel').classList.remove('open')}));
 $('#reset').addEventListener('click',()=>{S.done=[];S.favs=[];S.notes={};S.hidden={};['done','favs','notes'].forEach(k=>store.set(k,k==='notes'?{}:[]));render()});
 $('#ptoggle').addEventListener('click',()=>{const p=$('#panel');p.classList.toggle('open');$('#ptoggle').setAttribute('aria-expanded',p.classList.contains('open'))});
