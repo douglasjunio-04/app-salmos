@@ -42,5 +42,12 @@
     "api/contenido.js": {
       "includeFiles": "conteudo/**"
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/bio",
+      "destination": "/?utm_source=instagram&utm_medium=bio&utm_campaign=palabraconpoderr",
+      "permanent": false
+    }
+  ]
 }
